@@ -1,14 +1,87 @@
-import { StyleSheet } from 'react-native';
-
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+import { View } from '@/components/Themed';
+import { useRouter } from 'expo-router';
+import { Platform, StyleSheet } from 'react-native';
+import WebView from 'react-native-webview';
 
 export default function TabOneScreen() {
+  const router = useRouter();
+  const uri = 'http://127.0.0.1:32100/preview';
+
+  const handleShouldStartLoadWithRequest = (request: any) => {
+    if (request.url.includes('/app/')) {
+      const match = request.url.match(/\/app\/([^/?#]+)/);
+      if (match) {
+        router.push(`/app/${match[1]}`);
+        return false;
+      }
+    }
+    return true;
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+      {Platform.OS === 'web' ? (
+        <iframe
+          src={uri}
+          style={{ flex: 1, width: '100%', border: 'none' }}
+          title="Home Preview"
+        />
+      ) : (
+        <WebView
+          source={{ uri }}
+          style={{ flex: 1 }}
+          originWhitelist={['*']}
+          mixedContentMode="compatibility"
+          javaScriptEnabled={true}
+          allowsInlineMediaPlayback={true}
+          mediaPlaybackRequiresUserAction={false}
+          startInLoadingState={true}
+          onError={(syntheticEvent) => {
+            const { nativeEvent } = syntheticEvent;
+            console.error('WebView failed to load:', nativeEvent);
+          }}
+          onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
+          injectedJavaScript={`
+            true; // Prevent injection errors
+            function hideWebHeader() {
+              // Target various possible header elements
+              const selectors = [
+                'h1',
+                '.header',
+                '#header',
+                'nav',
+                '[role="banner"]',
+                '.navbar',
+                'header'
+              ];
+              selectors.forEach(selector => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(el => {
+                  if (el.textContent && el.textContent.includes('Home') || el.querySelector('.user, [name="user"], .profile-icon')) {
+                    el.style.display = 'none';
+                  }
+                });
+              });
+              // Also hide any top-level divs or sections that might be headers
+              const topElements = document.body.children;
+              for (let el of topElements) {
+                if (el.tagName === 'DIV' && (el.classList.contains('header') || el.id === 'header' || el.textContent.includes('Home'))) {
+                  el.style.display = 'none';
+                }
+              }
+            }
+            // Run on load
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', hideWebHeader);
+            } else {
+              hideWebHeader();
+            }
+            // Observe for dynamic changes
+            const observer = new MutationObserver(hideWebHeader);
+            observer.observe(document.body, { childList: true, subtree: true });
+          `}
+        />
+      )}
     </View>
   );
 }
@@ -16,16 +89,5 @@ export default function TabOneScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
   },
 });
