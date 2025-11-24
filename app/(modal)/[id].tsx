@@ -27,17 +27,24 @@ export default function AppDetailScreen() {
   useFocusEffect(
     useCallback(() => {
       const parent = navigation.getParent();
-      parent?.setOptions({ tabBarStyle: { display: 'none' } });
+      parent?.setOptions({
+        tabBarStyle: { display: 'none' },
+        headerShown: false
+      });
       return () => {
-        parent?.setOptions({ tabBarStyle: { display: 'flex' } });
+        parent?.setOptions({
+          tabBarStyle: { display: 'flex' },
+          headerShown: true
+        });
       };
     }, [navigation])
   );
 
   useEffect(() => {
-    if (app) {
-      navigation.setOptions({ title: app.name || id });
-    }
+    navigation.setOptions({
+      headerShown: false,
+      title: app?.name || id,
+    });
   }, [app, id, navigation]);
 
   const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];

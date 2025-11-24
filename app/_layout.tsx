@@ -47,13 +47,13 @@ export default function RootLayout() {
 function RootLayoutNav() {
   return (
     <ThemeProvider value={DefaultTheme}>
-      <Stack>
+      <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen 
           name="(modal)" 
           options={{ 
             presentation: 'modal',
-            headerShown: false 
+            headerShown: false
           }} 
         />
         <Stack.Screen name="profile" options={{ presentation: 'modal', headerShown: false }} />
