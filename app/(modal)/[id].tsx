@@ -1,16 +1,18 @@
 import { useColorScheme } from '@/components/useColorScheme';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useFocusEffect } from '@react-navigation/native';
 import Constants from 'expo-constants';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Image, Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import WebView from 'react-native-webview';
 
 interface App {
   name?: string;
   description?: string;
   icon?: string;
   launchUrl?: string;
+  rating?: number;
+  users?: number;
+  screenshots?: string[];
 }
 
 export default function AppDetailScreen() {
@@ -19,6 +21,24 @@ export default function AppDetailScreen() {
   const colorScheme = useColorScheme();
   const [app, setApp] = useState<App | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const navigation = useNavigation();
+
+  useFocusEffect(
+    useCallback(() => {
+      const parent = navigation.getParent();
+      parent?.setOptions({ tabBarStyle: { display: 'none' } });
+      return () => {
+        parent?.setOptions({ tabBarStyle: { display: 'flex' } });
+      };
+    }, [navigation])
+  );
+
+  useEffect(() => {
+    if (app) {
+      navigation.setOptions({ title: app.name || id });
+    }
+  }, [app, id, navigation]);
 
   const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
   const host = expoHost || '192.168.1.204';
@@ -54,30 +74,9 @@ export default function AppDetailScreen() {
     }
   };
 
-  // ✅ UPDATED: Use router.dismiss() for modal or router.back() as fallback
-  const handleBack = () => {
-    if (router.canDismiss()) {
-      router.dismiss();
-    } else {
-      router.back();
-    }
-  };
-
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: colorScheme === 'dark' ? '#000' : '#fff' }]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleBack} style={styles.homeButton}>
-            <FontAwesome
-              name="arrow-left"
-              size={24}
-              color={colorScheme === 'dark' ? 'white' : 'black'}
-            />
-          </TouchableOpacity>
-          <Text style={[styles.title, { color: colorScheme === 'dark' ? 'white' : 'black' }]}>
-            Loading...
-          </Text>
-        </View>
         <Text style={[styles.loadingText, { color: colorScheme === 'dark' ? 'white' : 'black' }]}>
           Loading app details...
         </Text>
@@ -88,76 +87,46 @@ export default function AppDetailScreen() {
   const title = app?.name || id;
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: colorScheme === 'dark' ? '#000' : '#fff' }]} 
-      contentContainerStyle={styles.contentContainer}
-    >
-      <View style={[styles.header, { backgroundColor: colorScheme === 'dark' ? '#1c1c1e' : '#f8f9fa' }]}>
-        <TouchableOpacity onPress={handleBack} style={styles.homeButton}>
-          <FontAwesome
-            name="arrow-left"
-            size={24}
-            color={colorScheme === 'dark' ? 'white' : 'black'}
-          />
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: colorScheme === 'dark' ? 'white' : 'black' }]}>
-          {title}
-        </Text>
-        <View style={styles.headerSpacer} />
-      </View>
-
-      {app?.icon && (
-        <Image source={{ uri: app.icon }} style={styles.icon} resizeMode="contain" />
-      )}
-
-      {app?.description && (
-        <View style={styles.descriptionContainer}>
-          <Text style={[styles.description, { color: colorScheme === 'dark' ? '#e5e5e5' : '#333' }]}>
-            {app.description}
-          </Text>
-        </View>
-      )}
-
-      <View style={styles.previewContainer}>
-        {Platform.OS === 'web' ? (
-          <iframe
-            src={previewUri}
-            style={styles.webview}
-            title={`App Preview ${title}`}
-          />
-        ) : (
-          <WebView
-            source={{ uri: previewUri }}
-            style={styles.webview}
-            originWhitelist={['*']}
-            mixedContentMode="compatibility"
-            javaScriptEnabled={true}
-            allowsInlineMediaPlayback={true}
-            mediaPlaybackRequiresUserAction={false}
-            startInLoadingState={true}
-            // ✅ ADD: Prevent nested navigation within the preview WebView
-            onShouldStartLoadWithRequest={(request) => {
-              const url = request.url;
-              // Allow the initial preview URL and same-origin requests
-              if (url.startsWith(previewUri) || url === previewUri) {
-                return true;
-              }
-              // Block nested app detail links to prevent modal stacking from See All
-              if (url.includes('/preview/app/') && url !== previewUri) {
-                console.log('Blocking nested app detail:', url);
-                return false;
-              }
-              // For external links, open in browser
-              if (url.startsWith('http')) {
-                Linking.openURL(url);
-                return false;
-              }
-              // Allow other internal links (e.g., reviews) to load in WebView
-              return true;
-            }}
-          />
+    <View style={[styles.container, { backgroundColor: colorScheme === 'dark' ? '#000' : '#fff' }]}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.contentContainer}
+      >
+        {app?.icon && (
+          <Image source={{ uri: app.icon }} style={styles.icon} resizeMode="contain" />
         )}
-      </View>
+
+        <View style={styles.appInfoContainer}>
+          <Text style={styles.appTitle}>{app?.name || id}</Text>
+          {app?.rating && (
+            <Text style={styles.rating}>
+              {app.rating} • {app.users || '0'} users
+            </Text>
+          )}
+        </View>
+
+        {app?.description && (
+          <View style={styles.descriptionContainer}>
+            <Text style={[styles.description, { color: colorScheme === 'dark' ? '#e5e5e5' : '#333' }]}>
+              {app.description}
+            </Text>
+          </View>
+        )}
+
+        <View style={styles.screenshotsContainer}>
+          <Text style={styles.sectionTitle}>Screenshots</Text>
+          <View style={styles.activeScreenshot}>
+            <Text style={styles.activeLabel}>Active screenshot</Text>
+            {app?.screenshots && app.screenshots.length > 0 ? (
+              <Image source={{ uri: app.screenshots[0] }} style={styles.screenshotImage} />
+            ) : (
+              <View style={styles.screenshotPlaceholder}>
+                <Text style={styles.placeholderText}>No screenshot available</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </ScrollView>
 
       <View style={[
         styles.buttonContainer, 
@@ -170,7 +139,7 @@ export default function AppDetailScreen() {
           <Text style={styles.launchButtonText}>Launch App</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -178,33 +147,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollView: {
+    flex: 1,
+  },
   contentContainer: {
     flexGrow: 1,
     paddingTop: Platform.OS === 'ios' ? 50 : 0, // ✅ Add safe area for iOS
-  },
-  header: {
-    height: 60,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 10 : 0,
-  },
-  homeButton: {
-    paddingRight: 16,
-  },
-  headerSpacer: {
-    width: 40, // Balance the layout
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    flex: 1,
+    paddingBottom: 70,
   },
   icon: {
     width: 100,
     height: 100,
     alignSelf: 'center',
     marginVertical: 16,
+  },
+  appInfoContainer: {
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  appTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 4,
+    color: '#000',
+  },
+  rating: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
   descriptionContainer: {
     paddingHorizontal: 16,
@@ -215,22 +186,55 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     textAlign: 'justify',
   },
-  previewContainer: {
-    flex: 1,
+  screenshotsContainer: {
+    paddingHorizontal: 16,
     marginVertical: 16,
-    minHeight: 400, // ✅ Ensure WebView has minimum height
   },
-  webview: {
-    flex: 1,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+    color: '#000',
+  },
+  activeScreenshot: {
+    backgroundColor: '#f8f9fa',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  activeLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  screenshotImage: {
     width: '100%',
-    borderWidth: 0,
+    height: 200,
+    borderRadius: 8,
+  },
+  screenshotPlaceholder: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#e5e5e5',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: '#999',
+    fontSize: 14,
   },
   buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     height: 70,
     justifyContent: 'center',
     borderTopWidth: 1,
     paddingHorizontal: 16,
     paddingBottom: Platform.OS === 'ios' ? 20 : 16, // ✅ Safe area for iOS home indicator
+    zIndex: 1000,
   },
   launchButton: {
     backgroundColor: '#007AFF',

@@ -1,8 +1,8 @@
 import { useColorScheme } from '@/components/useColorScheme';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Constants from 'expo-constants';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { Alert, Button, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect } from 'react';
+import { Alert, Button, Platform, StyleSheet, View } from 'react-native';
 import WebView from 'react-native-webview';
 
 export default function AppDetailScreen() {
@@ -10,6 +10,10 @@ export default function AppDetailScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
 
   const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
   const host = expoHost || '192.168.1.204';
@@ -22,18 +26,6 @@ export default function AppDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.replace('/')} style={styles.homeButton}>
-          <FontAwesome
-            name="home"
-            size={24}
-            color={colorScheme === 'dark' ? 'white' : 'black'}
-          />
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: colorScheme === 'dark' ? 'white' : 'black' }]}>
-          {id}
-        </Text>
-      </View>
       {Platform.OS === 'web' ? (
         <iframe
           src={uri}
@@ -62,20 +54,6 @@ export default function AppDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    height: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    backgroundColor: '#f8f9fa',
-  },
-  homeButton: {
-    paddingRight: 16,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
   },
   webview: {
     flex: 1,
