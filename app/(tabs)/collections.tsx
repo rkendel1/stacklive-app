@@ -1,9 +1,14 @@
 import { View } from '@/components/Themed';
+import { useRouter } from 'expo-router';
 import { Platform, StyleSheet } from 'react-native';
 import WebView from 'react-native-webview';
 
+
 export default function CollectionsScreen() {
-  const uri = 'http://127.0.0.1:32100/preview?view=lists';
+  const router = useRouter();
+  const isIOS = Platform.OS === 'ios';
+  const host = isIOS ? '192.168.1.204' : '127.0.0.1';
+  const uri = `http://${host}:32100/preview?view=lists`;
 
   return (
     <View style={styles.container}>

@@ -3,9 +3,12 @@ import { useRouter } from 'expo-router';
 import { Platform, StyleSheet } from 'react-native';
 import WebView from 'react-native-webview';
 
+
 export default function MyAppsScreen() {
   const router = useRouter();
-  const uri = 'http://127.0.0.1:32100/preview?view=my-apps';
+  const isIOS = Platform.OS === 'ios';
+  const host = isIOS ? '192.168.1.204' : '127.0.0.1';
+  const uri = `http://${host}:32100/preview?view=my-apps`;
 
   const handleShouldStartLoadWithRequest = (request: any) => {
     if (request.url.includes('/app/')) {

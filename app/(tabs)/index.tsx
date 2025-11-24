@@ -5,7 +5,9 @@ import WebView from 'react-native-webview';
 
 export default function TabOneScreen() {
   const router = useRouter();
-  const uri = 'http://127.0.0.1:32100/preview';
+  const isIOS = Platform.OS === 'ios';
+  const host = isIOS ? '192.168.1.204' : '127.0.0.1';
+  const uri = `http://${host}:32100/preview`;
 
   const handleShouldStartLoadWithRequest = (request: any) => {
     if (request.url.includes('/app/')) {
