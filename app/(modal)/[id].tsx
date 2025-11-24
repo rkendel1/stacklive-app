@@ -137,15 +137,22 @@ export default function AppDetailScreen() {
             startInLoadingState={true}
             // ✅ ADD: Prevent nested navigation within the preview WebView
             onShouldStartLoadWithRequest={(request) => {
+              const url = request.url;
               // Allow the initial preview URL and same-origin requests
-              if (request.url.startsWith(previewUri) || request.url === previewUri) {
+              if (url.startsWith(previewUri) || url === previewUri) {
                 return true;
               }
-              // For external links, open in browser
-              if (request.url.startsWith('http')) {
-                Linking.openURL(request.url);
+              // Block nested app detail links to prevent modal stacking from See All
+              if (url.includes('/preview/app/') && url !== previewUri) {
+                console.log('Blocking nested app detail:', url);
                 return false;
               }
+              // For external links, open in browser
+              if (url.startsWith('http')) {
+                Linking.openURL(url);
+                return false;
+              }
+              // Allow other internal links (e.g., reviews) to load in WebView
               return true;
             }}
           />
