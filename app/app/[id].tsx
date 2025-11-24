@@ -10,7 +10,7 @@ export default function AppDetailScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
-  const uri = `http://127.0.0.1:32100/preview/app/${id}`;
+  const uri = `http://192.168.1.204:3000/preview/app/${id}`;
 
   useEffect(() => {
     navigation.setOptions({

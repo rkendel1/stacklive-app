@@ -8,17 +8,17 @@ export default function MobilePreview() {
   let uri;
   switch (view) {
     case 'trending':
-      uri = 'http://127.0.0.1:32100/preview?view=trending';
+      uri = 'http://192.168.1.204:3000/preview?view=trending';
       break;
     case 'lists':
-      uri = 'http://127.0.0.1:32100/preview?view=lists';
+      uri = 'http://192.168.1.204:3000/preview?view=lists';
       break;
     case 'my-apps':
-      uri = 'http://127.0.0.1:32100/preview?view=my-apps';
+      uri = 'http://192.168.1.204:3000/preview?view=my-apps';
       break;
     case 'home':
     default:
-      uri = 'http://127.0.0.1:32100/preview';
+      uri = 'http://192.168.1.204:3000/preview';
       break;
   }
 
