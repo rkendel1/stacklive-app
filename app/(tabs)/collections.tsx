@@ -7,15 +7,14 @@ import { Platform, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-n
 import WebView from 'react-native-webview';
 
 
-
-export default function CollectionsScreen() {
+export default function CollectionScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const colorScheme = useColorScheme();
-// Detect correct Expo LAN host or use fallback local IP
+   // Detect correct Expo LAN host or use fallback local IP
   const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
   const host = expoHost || '192.168.1.204';
-  const baseUri = `http://${host}:3000/preview?view=trending`;
+  const baseUri = `http://${host}:3000/preview?view=lists`;
   const uri = searchQuery ? `${baseUri}&q=${encodeURIComponent(searchQuery)}` : baseUri;
 
   const handleShouldStartLoadWithRequest = (request: any) => {
@@ -34,7 +33,7 @@ export default function CollectionsScreen() {
       <View style={styles.headerContainer}>
         <TextInput
           style={[styles.searchInput, { backgroundColor: colorScheme === 'dark' ? '#333' : '#f9f9f9', color: colorScheme === 'dark' ? '#fff' : '#000' }]}
-          placeholder="Search collections..."
+          placeholder="Search trending..."
           placeholderTextColor={colorScheme === 'dark' ? '#aaa' : '#666'}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -50,7 +49,7 @@ export default function CollectionsScreen() {
           <iframe
             src={uri}
             style={{ flex: 1, width: '100%', border: 'none' }}
-            title="Collections Preview"
+            title="Trending Preview"
           />
         ) : (
           <WebView

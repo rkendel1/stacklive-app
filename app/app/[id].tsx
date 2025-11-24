@@ -23,7 +23,7 @@ export default function AppDetailScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.replace('../index')} style={styles.homeButton}>
+        <TouchableOpacity onPress={() => router.replace('/')} style={styles.homeButton}>
           <FontAwesome
             name="home"
             size={24}

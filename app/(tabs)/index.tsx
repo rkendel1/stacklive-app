@@ -2,62 +2,45 @@ import { View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
-import { Animated, Platform, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+import { Platform, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
 import WebView from 'react-native-webview';
 
-export default function TabOneScreen() {
+export default function HomeScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-
-  const headerTranslateY = useRef(new Animated.Value(0)).current;
-  const lastScrollY = useRef(0);
-  const [headerHeight, setHeaderHeight] = useState(0);
-
   const colorScheme = useColorScheme();
 
-  // Detect correct Expo LAN host or use fallback local IP
+  // Detect correct Expo LAN host or fallback
   const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
   const host = expoHost || '192.168.1.204';
-
-  // Base URL for home screen
   const baseUri = `http://${host}:3000/preview`;
+  const uri = searchQuery ? `${baseUri}?q=${encodeURIComponent(searchQuery)}` : baseUri;
 
-  // Merge search query if present
-  const uri = searchQuery
-    ? `${baseUri}?q=${encodeURIComponent(searchQuery)}`
-    : baseUri;
-
-  const handleScroll = (event: any) => {
-    const { y: currentY } = event.nativeEvent.contentOffset;
-    const delta = currentY - lastScrollY.current;
-    if (Math.abs(delta) > 10) {
-      const toValue = delta > 0 ? -headerHeight : 0;
-      Animated.spring(headerTranslateY, {
-        toValue,
-        tension: 300,
-        friction: 30,
-        useNativeDriver: true,
-      }).start();
-      lastScrollY.current = currentY;
+  // Intercept /app/ links to push new detail page
+  const handleShouldStartLoadWithRequest = (request: any) => {
+    if (request.url.includes('/app/')) {
+      const match = request.url.match(/\/app\/([^/?#]+)/);
+      if (match) {
+        router.push(`/app/${match[1]}`);
+        return false;
+      }
     }
+    return true;
   };
 
   return (
     <View style={styles.container}>
-      <Animated.View
-        style={[
-          styles.headerContainer,
-          {
-            backgroundColor: colorScheme === 'dark' ? '#000' : '#f8f9fa',
-            transform: [{ translateY: headerTranslateY }],
-          },
-        ]}
-        onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
-      >
+      <View style={styles.headerContainer}>
         <TextInput
-          style={[styles.searchInput, { backgroundColor: colorScheme === 'dark' ? '#333' : '#f9f9f9', color: colorScheme === 'dark' ? '#fff' : '#000' }]}
-          placeholder="Search apps"
+          style={[
+            styles.searchInput,
+            {
+              backgroundColor: colorScheme === 'dark' ? '#333' : '#f9f9f9',
+              color: colorScheme === 'dark' ? '#fff' : '#000',
+            },
+          ]}
+          placeholder="Search apps..."
           placeholderTextColor={colorScheme === 'dark' ? '#aaa' : '#666'}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -67,33 +50,39 @@ export default function TabOneScreen() {
             <Text style={styles.avatarText}>U</Text>
           </View>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
+
       <View style={styles.webViewContainer}>
-        <WebView
-          source={{ uri }}
-          style={styles.webView}
-          originWhitelist={['*']}
-          mixedContentMode="compatibility"
-          javaScriptEnabled={true}
-          allowsInlineMediaPlayback={true}
-          mediaPlaybackRequiresUserAction={false}
-          startInLoadingState={true}
-          bounces={Platform.OS === 'ios'}
-          scrollEnabled={true}
-          scalesPageToFit={false}
-          injectedJavaScript="document.documentElement.style.height = '100vh'; document.body.style.height = '100vh'; document.body.style.overflowY = 'scroll'; true;"
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-        />
+        {Platform.OS === 'web' ? (
+          <iframe
+            src={uri}
+            style={{ flex: 1, width: '100%', border: 'none' }}
+            title="Home Preview"
+          />
+        ) : (
+          <WebView
+            source={{ uri }}
+            style={styles.webView}
+            originWhitelist={['*']}
+            mixedContentMode="compatibility"
+            javaScriptEnabled
+            allowsInlineMediaPlayback
+            mediaPlaybackRequiresUserAction={false}
+            startInLoadingState
+            bounces={Platform.OS === 'ios'}
+            scrollEnabled
+            scalesPageToFit={false}
+            injectedJavaScript="document.documentElement.style.height = '100vh'; document.body.style.height = '100vh'; document.body.style.overflowY = 'scroll'; true;"
+            onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
+          />
+        )}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -110,9 +99,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginRight: 12,
   },
-  profileContainer: {
-    marginLeft: 'auto',
-  },
+  profileContainer: { marginLeft: 'auto' },
   profileAvatar: {
     width: 40,
     height: 40,
@@ -120,15 +107,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#666',
-  },
-  webViewContainer: {
-    flex: 1,
-  },
-  webView: {
-    flex: 1,
-  },
+  avatarText: { fontSize: 16, fontWeight: 'bold', color: '#666' },
+  webViewContainer: { flex: 1 },
+  webView: { flex: 1 },
 });

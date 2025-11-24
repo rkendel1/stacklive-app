@@ -23,10 +23,6 @@ export default function TabLayout() {
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: activeColor,
-          tabBarIndicatorStyle: {
-            backgroundColor: activeColor,
-            height: 3,
-          },
           tabBarStyle: {
             backgroundColor: '#f8f9fa',
             height: 60 + insets.bottom,
