@@ -50,7 +50,7 @@ function RootLayoutNav() {
         <Stack.Screen 
           name="app-detail" 
           options={{ 
-            presentation: 'transparentModal',
+            presentation: 'fullScreenModal',
             headerShown: false,
             animation: 'slide_from_bottom'
           }} 
