@@ -6,6 +6,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { HideUIProvider } from '../contexts/HideUIContext';
 
 export {
   ErrorBoundary
@@ -42,25 +43,27 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   return (
-    <ThemeProvider value={DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <HideUIProvider>
+      <ThemeProvider value={DefaultTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen 
           name="app-detail" 
           options={{ 
-            presentation: 'fullScreenModal',
+            presentation: 'transparentModal',
             headerShown: false,
             animation: 'slide_from_bottom'
           }} 
         />
-        <Stack.Screen 
-          name="profile" 
-          options={{ 
-            presentation: 'modal', 
-            headerShown: false 
-          }} 
-        />
-      </Stack>
-    </ThemeProvider>
+          <Stack.Screen 
+            name="profile" 
+            options={{ 
+              presentation: 'modal', 
+              headerShown: false 
+            }} 
+          />
+        </Stack>
+      </ThemeProvider>
+    </HideUIProvider>
   );
 }

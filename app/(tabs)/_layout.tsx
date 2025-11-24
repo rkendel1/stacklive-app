@@ -5,10 +5,12 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useHideUI } from '../../contexts/HideUIContext';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets();
+  const { hideUI } = useHideUI();
 
   const activeColor = colorScheme === 'dark' ? 'white' : 'blue';
 
@@ -18,17 +20,19 @@ export default function TabLayout() {
     },
   });
 
+  const tabBarStyle = hideUI ? false : {
+    backgroundColor: '#f8f9fa',
+    height: 60 + insets.bottom,
+    paddingBottom: insets.bottom,
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Tabs
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: activeColor,
-          tabBarStyle: {
-            backgroundColor: '#f8f9fa',
-            height: 60 + insets.bottom,
-            paddingBottom: insets.bottom,
-          },
+          tabBarStyle,
         }}
       >
         <Tabs.Screen

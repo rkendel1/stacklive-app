@@ -2,8 +2,8 @@ import { Text as ThemedText, View } from '@/components/Themed';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
-
+import { Platform, StyleSheet, Switch, Text, TouchableOpacity } from 'react-native';
+import { useHideUI } from '../contexts/HideUIContext';
 
 import WebView from 'react-native-webview';
 
@@ -15,6 +15,7 @@ interface UserApp {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { hideSearchBar, setHideSearchBar } = useHideUI();
 
 const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
 const host = expoHost || '192.168.1.204'; // replace with your LAN IP if needed
@@ -29,6 +30,11 @@ const uri = `http://${host}:3000/preview?view=profile`;
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle}>Profile</ThemedText>
         <View style={styles.headerSpacer} />
+      </View>
+
+      <View style={styles.settingSection}>
+        <Text style={styles.settingLabel}>Hide Search Bar</Text>
+        <Switch value={hideSearchBar} onValueChange={setHideSearchBar} />
       </View>
 
       <WebView
@@ -73,6 +79,29 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 24, // Placeholder for balance
+  },
+  settingSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    backgroundColor: 'white',
+    marginBottom: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  settingLabel: {
+    fontSize: 16,
+    color: '#333',
   },
   scrollView: {
     flex: 1,

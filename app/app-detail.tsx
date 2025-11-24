@@ -1,16 +1,24 @@
-// app/app-detail.tsx - WebView version (consistent with your tab screens)
-
 import { useColorScheme } from '@/components/useColorScheme';
 import Constants from 'expo-constants';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Platform, StyleSheet } from 'react-native';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
+import { useHideUI } from '../contexts/HideUIContext';
 
 export default function AppDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const colorScheme = useColorScheme();
+  const { setHideUI } = useHideUI();
+
+  useFocusEffect(
+    useCallback(() => {
+      setHideUI(true);
+      return () => setHideUI(false);
+    }, [setHideUI])
+  );
 
   const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
   const host = expoHost || '192.168.1.204';
@@ -47,47 +55,49 @@ export default function AppDetailScreen() {
   const backgroundColor = colorScheme === 'dark' ? '#000' : '#fff';
 
   return (
-    <SafeAreaView 
-      style={[styles.container, { backgroundColor }]} 
-      edges={['top', 'bottom']}
-    >
-      {Platform.OS === 'web' ? (
-        <iframe
-          src={uri}
-          style={{ flex: 1, width: '100%', border: 'none' }}
-          title={`App Detail ${id}`}
-        />
-      ) : (
-        <WebView
-          source={{ uri }}
-          style={styles.webView}
-          originWhitelist={['*']}
-          mixedContentMode="compatibility"
-          javaScriptEnabled={true}
-          allowsInlineMediaPlayback={true}
-          mediaPlaybackRequiresUserAction={false}
-          startInLoadingState={true}
-          bounces={Platform.OS === 'ios'}
-          scrollEnabled={true}
-          scalesPageToFit={false}
-          injectedJavaScript={injectedJavaScript}
-          onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
-          setSupportMultipleWindows={false}
-          // Enable pull-to-refresh if you want
-          pullToRefreshEnabled={false}
-          // Handle messages from WebView if needed
-          onMessage={(event) => {
-            const data = event.nativeEvent.data;
-            console.log('Message from WebView:', data);
-            
-            // Example: Handle close button from web
-            if (data === 'close') {
-              router.back();
-            }
-          }}
-        />
-      )}
-    </SafeAreaView>
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor }}>
+      <SafeAreaView 
+        style={styles.container} 
+        edges={['top', 'bottom']}
+      >
+        {Platform.OS === 'web' ? (
+          <iframe
+            src={uri}
+            style={{ flex: 1, width: '100%', border: 'none' }}
+            title={`App Detail ${id}`}
+          />
+        ) : (
+          <WebView
+            source={{ uri }}
+            style={styles.webView}
+            originWhitelist={['*']}
+            mixedContentMode="compatibility"
+            javaScriptEnabled={true}
+            allowsInlineMediaPlayback={true}
+            mediaPlaybackRequiresUserAction={false}
+            startInLoadingState={true}
+            bounces={Platform.OS === 'ios'}
+            scrollEnabled={true}
+            scalesPageToFit={false}
+            injectedJavaScript={injectedJavaScript}
+            onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
+            setSupportMultipleWindows={false}
+            // Enable pull-to-refresh if you want
+            pullToRefreshEnabled={false}
+            // Handle messages from WebView if needed
+            onMessage={(event) => {
+              const data = event.nativeEvent.data;
+              console.log('Message from WebView:', data);
+              
+              // Example: Handle close button from web
+              if (data === 'close') {
+                router.back();
+              }
+            }}
+          />
+        )}
+      </SafeAreaView>
+    </View>
   );
 }
 
