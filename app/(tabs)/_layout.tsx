@@ -2,7 +2,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
@@ -23,12 +23,13 @@ export default function TabLayout() {
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: activeColor,
-          // @ts-ignore
           tabBarIndicatorStyle: {
             backgroundColor: activeColor,
             height: 3,
           },
           tabBarStyle: {
+            backgroundColor: '#f8f9fa',
+            height: 60 + insets.bottom,
             paddingBottom: insets.bottom,
           },
         }}
@@ -37,28 +38,48 @@ export default function TabLayout() {
           name="index"
           options={{
             title: 'Home',
-            tabBarIcon: ({ color }) => <FontAwesome name="home" size={24} color={color} />,
+            tabBarLabel: ({ focused }: { focused: boolean }) => (
+              <Text style={{ fontWeight: focused ? 'bold' : 'normal' }}>Home</Text>
+            ),
+            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+              <FontAwesome name="home" size={24} color={focused ? activeColor : color} />
+            ),
           }}
         />
         <Tabs.Screen
           name="trending"
           options={{
             title: 'Trending',
-            tabBarIcon: ({ color }) => <FontAwesome name="fire" size={24} color={color} />,
+            tabBarLabel: ({ focused }: { focused: boolean }) => (
+              <Text style={{ fontWeight: focused ? 'bold' : 'normal' }}>Trending</Text>
+            ),
+            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+              <FontAwesome name="fire" size={24} color={focused ? activeColor : color} />
+            ),
           }}
         />
         <Tabs.Screen
           name="my-apps"
           options={{
             title: 'My Apps',
-            tabBarIcon: ({ color }) => <FontAwesome name="briefcase" size={24} color={color} />,
+            tabBarLabel: ({ focused }: { focused: boolean }) => (
+              <Text style={{ fontWeight: focused ? 'bold' : 'normal' }}>My Apps</Text>
+            ),
+            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+              <FontAwesome name="briefcase" size={24} color={focused ? activeColor : color} />
+            ),
           }}
         />
         <Tabs.Screen
           name="collections"
           options={{
             title: 'Collections',
-            tabBarIcon: ({ color }) => <FontAwesome name="folder-o" size={24} color={color} />,
+            tabBarLabel: ({ focused }: { focused: boolean }) => (
+              <Text style={{ fontWeight: focused ? 'bold' : 'normal' }}>Collections</Text>
+            ),
+            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+              <FontAwesome name="folder-o" size={24} color={focused ? activeColor : color} />
+            ),
           }}
         />
       </Tabs>

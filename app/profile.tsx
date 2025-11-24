@@ -1,7 +1,9 @@
 import { Text as ThemedText, View } from '@/components/Themed';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
+
 
 import WebView from 'react-native-webview';
 
@@ -13,6 +15,10 @@ interface UserApp {
 
 export default function ProfileScreen() {
   const router = useRouter();
+
+const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
+const host = expoHost || '192.168.1.204'; // replace with your LAN IP if needed
+const uri = `http://${host}:3000/preview?view=profile`;
 
   return (
     <View style={styles.container}>
@@ -26,7 +32,7 @@ export default function ProfileScreen() {
       </View>
 
       <WebView
-        source={{ uri: 'http://127.0.0.1:3000/preview?view=profile' }}
+        source={{ uri }}
         style={{ flex: 1 }}
       />
     </View>
