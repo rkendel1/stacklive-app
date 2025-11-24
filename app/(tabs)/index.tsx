@@ -22,7 +22,7 @@ export default function HomeScreen() {
     if (request.url.includes('/app/')) {
       const match = request.url.match(/\/app\/([^/?#]+)/);
       if (match) {
-        router.push(`/app/${match[1]}`);
+        router.push(`/modal?id=${match[1]}`);
         return false;
       }
     }
