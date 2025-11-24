@@ -54,14 +54,33 @@ export default function AppDetailScreen() {
     }
   };
 
+  // ✅ UPDATED: Use router.dismiss() for modal or router.back() as fallback
   const handleBack = () => {
-    router.back();
+    if (router.canDismiss()) {
+      router.dismiss();
+    } else {
+      router.back();
+    }
   };
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.loadingText}>Loading app details...</Text>
+      <View style={[styles.container, { backgroundColor: colorScheme === 'dark' ? '#000' : '#fff' }]}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleBack} style={styles.homeButton}>
+            <FontAwesome
+              name="arrow-left"
+              size={24}
+              color={colorScheme === 'dark' ? 'white' : 'black'}
+            />
+          </TouchableOpacity>
+          <Text style={[styles.title, { color: colorScheme === 'dark' ? 'white' : 'black' }]}>
+            Loading...
+          </Text>
+        </View>
+        <Text style={[styles.loadingText, { color: colorScheme === 'dark' ? 'white' : 'black' }]}>
+          Loading app details...
+        </Text>
       </View>
     );
   }
@@ -69,8 +88,11 @@ export default function AppDetailScreen() {
   const title = app?.name || id;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <View style={styles.header}>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: colorScheme === 'dark' ? '#000' : '#fff' }]} 
+      contentContainerStyle={styles.contentContainer}
+    >
+      <View style={[styles.header, { backgroundColor: colorScheme === 'dark' ? '#1c1c1e' : '#f8f9fa' }]}>
         <TouchableOpacity onPress={handleBack} style={styles.homeButton}>
           <FontAwesome
             name="arrow-left"
@@ -81,6 +103,7 @@ export default function AppDetailScreen() {
         <Text style={[styles.title, { color: colorScheme === 'dark' ? 'white' : 'black' }]}>
           {title}
         </Text>
+        <View style={styles.headerSpacer} />
       </View>
 
       {app?.icon && (
@@ -89,7 +112,9 @@ export default function AppDetailScreen() {
 
       {app?.description && (
         <View style={styles.descriptionContainer}>
-          <Text style={styles.description}>{app.description}</Text>
+          <Text style={[styles.description, { color: colorScheme === 'dark' ? '#e5e5e5' : '#333' }]}>
+            {app.description}
+          </Text>
         </View>
       )}
 
@@ -110,11 +135,30 @@ export default function AppDetailScreen() {
             allowsInlineMediaPlayback={true}
             mediaPlaybackRequiresUserAction={false}
             startInLoadingState={true}
+            // ✅ ADD: Prevent nested navigation within the preview WebView
+            onShouldStartLoadWithRequest={(request) => {
+              // Allow the initial preview URL and same-origin requests
+              if (request.url.startsWith(previewUri) || request.url === previewUri) {
+                return true;
+              }
+              // For external links, open in browser
+              if (request.url.startsWith('http')) {
+                Linking.openURL(request.url);
+                return false;
+              }
+              return true;
+            }}
           />
         )}
       </View>
 
-      <View style={styles.buttonContainer}>
+      <View style={[
+        styles.buttonContainer, 
+        { 
+          backgroundColor: colorScheme === 'dark' ? '#1c1c1e' : 'white',
+          borderTopColor: colorScheme === 'dark' ? '#38383a' : '#E5E5EA'
+        }
+      ]}>
         <TouchableOpacity style={styles.launchButton} onPress={handleLaunch}>
           <Text style={styles.launchButtonText}>Launch App</Text>
         </TouchableOpacity>
@@ -129,16 +173,20 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexGrow: 1,
+    paddingTop: Platform.OS === 'ios' ? 50 : 0, // ✅ Add safe area for iOS
   },
   header: {
-    height: 50,
+    height: 60,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    backgroundColor: '#f8f9fa',
+    paddingTop: Platform.OS === 'ios' ? 10 : 0,
   },
   homeButton: {
     paddingRight: 16,
+  },
+  headerSpacer: {
+    width: 40, // Balance the layout
   },
   title: {
     fontSize: 18,
@@ -163,6 +211,7 @@ const styles = StyleSheet.create({
   previewContainer: {
     flex: 1,
     marginVertical: 16,
+    minHeight: 400, // ✅ Ensure WebView has minimum height
   },
   webview: {
     flex: 1,
@@ -170,13 +219,11 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   buttonContainer: {
-    height: 50,
-    backgroundColor: 'white',
+    height: 70,
     justifyContent: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#E5E5EA',
     paddingHorizontal: 16,
-    marginBottom: 16,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 16, // ✅ Safe area for iOS home indicator
   },
   launchButton: {
     backgroundColor: '#007AFF',
