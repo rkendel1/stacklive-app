@@ -15,34 +15,33 @@ export default function TrendingScreen() {
   
   const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
   const host = expoHost || '192.168.1.204';
-  const baseUri = `http://${host}:3000/preview?view=my-apps`;
+  const baseUri = `http://${host}:3000/preview?my-apps`;
   const uri = searchQuery ? `${baseUri}&q=${encodeURIComponent(searchQuery)}` : baseUri;
 
-  // ✅ FIXED: Proper navigation interception for /preview/app/ URLs
   const handleShouldStartLoadWithRequest = (request: any) => {
     const url = request.url;
-    console.log('WebView attempting to load:', url); // Debug log
+    console.log('WebView attempting to load:', url);
     
-    // Check if it's an app detail link (matches /preview/app/app-15 pattern)
+    // Check if it's an app detail link
     if (url.includes('/preview/app/')) {
       const match = url.match(/\/preview\/app\/([^/?#]+)/);
       if (match) {
         const appId = match[1];
-        console.log('Intercepting navigation to app:', appId); // Debug log
+        console.log('Intercepting navigation to app:', appId);
         
-        // Navigate to native modal screen
-        router.push(`/(modal)/${appId}`);
+        // ✅ FIXED: Use object with pathname and params
+        router.push({
+          pathname: '/app-detail',
+          params: { id: appId }
+        });
         
-        // Return false to prevent WebView from loading this URL
         return false;
       }
     }
     
-    // Allow all other URLs to load in WebView
     return true;
   };
 
-  // ✅ ADD THIS: For Android, use onNavigationStateChange as backup
   const handleNavigationStateChange = (navState: any) => {
     if (Platform.OS === 'android') {
       const url = navState.url;
@@ -53,8 +52,12 @@ export default function TrendingScreen() {
         if (match) {
           const appId = match[1];
           console.log('Intercepting via navigationStateChange:', appId);
-          router.push(`/(modal)/${appId}`);
-          // Note: Can't prevent navigation here, but router will open modal
+          
+          // ✅ FIXED: Use object with pathname and params
+          router.push({
+            pathname: '/app-detail',
+            params: { id: appId }
+          });
         }
       }
     }
@@ -109,7 +112,6 @@ export default function TrendingScreen() {
             injectedJavaScript="document.documentElement.style.height = '100vh'; document.body.style.height = '100vh'; document.body.style.overflowY = 'scroll'; true;"
             onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
             onNavigationStateChange={handleNavigationStateChange}
-            // ✅ ADD: This ensures links open in the WebView context
             setSupportMultipleWindows={false}
           />
         )}
