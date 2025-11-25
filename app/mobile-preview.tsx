@@ -1,13 +1,14 @@
 import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
+import { createWebViewHandlers, getAppDetailUri, INJECTED_JAVASCRIPT, SHARED_WEBVIEW_STYLES, WEBVIEW_COMMON_PROPS } from '@/constants/config';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 import { useHideUI } from '../contexts/HideUIContext';
-import { getAppDetailUri } from '@/constants/config';
 
-export default function AppDetailScreen() {
+export default function MobilePreviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -20,37 +21,35 @@ export default function AppDetailScreen() {
     }, [setHideUI])
   );
 
-  const uri = getAppDetailUri(id);
+  if (!id) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Invalid app ID</Text>
+      </View>
+    );
+  }
 
-  // Inject JavaScript to hide any elements you want (if needed)
-  const injectedJavaScript = `
-    (function() {
-      // Hide any web header/footer if they exist
-      const style = document.createElement('style');
-      style.textContent = \`
-        body { 
-          margin: 0; 
-          padding: 0;
-          height: 100vh;
-          overflow-y: auto;
-        }
-      \`;
-      document.head.appendChild(style);
-    })();
-    true;
-  `;
+  const handlers = createWebViewHandlers(router);
+  const uri = getAppDetailUri(id as string);
+  const colors = Colors[colorScheme || 'light'];
+  const backgroundColor = colors.background;
 
-  // Handle navigation events (like Launch App button)
-  const handleShouldStartLoadWithRequest = (request: any) => {
-    const url = request.url;
-    console.log('App detail WebView navigation:', url);
-    
-    // If Launch App button redirects somewhere, handle it here
-    // For now, allow all navigation within the WebView
-    return true;
-  };
-
-  const backgroundColor = colorScheme === 'dark' ? '#000' : '#fff';
+  const styles = StyleSheet.create({
+    ...SHARED_WEBVIEW_STYLES,
+    frame: {
+      borderWidth: 1,
+      borderColor: colorScheme === 'dark' ? '#333' : '#ddd',
+      borderRadius: 20,
+      padding: 20,
+      margin: 20,
+      backgroundColor: colors.background,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+  });
 
   return (
     <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor }}>
@@ -59,51 +58,30 @@ export default function AppDetailScreen() {
         edges={['top', 'bottom']}
       >
         {Platform.OS === 'web' ? (
-          <iframe
-            src={uri}
-            style={{ flex: 1, width: '100%', border: 'none' }}
-            title={`App Detail ${id}`}
-          />
+          <View style={styles.frame}>
+            <iframe
+              src={uri}
+              style={{ flex: 1, width: '100%', border: 'none' }}
+              title={`Mobile Preview ${id}`}
+            />
+          </View>
         ) : (
-          <WebView
-            source={{ uri }}
-            style={styles.webView}
-            originWhitelist={['*']}
-            mixedContentMode="compatibility"
-            javaScriptEnabled={true}
-            allowsInlineMediaPlayback={true}
-            mediaPlaybackRequiresUserAction={false}
-            startInLoadingState={true}
-            bounces={Platform.OS === 'ios'}
-            scrollEnabled={true}
-            scalesPageToFit={false}
-            injectedJavaScript={injectedJavaScript}
-            onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
-            setSupportMultipleWindows={false}
-            // Enable pull-to-refresh if you want
-            pullToRefreshEnabled={false}
-            // Handle messages from WebView if needed
-            onMessage={(event) => {
-              const data = event.nativeEvent.data;
-              console.log('Message from WebView:', data);
-              
-              // Example: Handle close button from web
-              if (data === 'close') {
-                router.back();
-              }
-            }}
-          />
+          <View style={styles.frame}>
+            <WebView
+              source={{ uri }}
+              style={styles.webView}
+              {...WEBVIEW_COMMON_PROPS}
+              bounces={Platform.OS === 'ios'}
+              scrollEnabled={true}
+              injectedJavaScript={INJECTED_JAVASCRIPT}
+              onShouldStartLoadWithRequest={handlers.onShouldStartLoadWithRequest}
+              onMessage={handlers.onMessage}
+            />
+          </View>
         )}
       </SafeAreaView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  webView: {
-    flex: 1,
-  },
-});
+const styles = StyleSheet.create(SHARED_WEBVIEW_STYLES);

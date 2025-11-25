@@ -7,7 +7,7 @@ import Constants from 'expo-constants';
  */
 const hostUri = Constants.expoConfig?.hostUri;
 const expoHost = hostUri ? hostUri.split(':')[0] : undefined;
-export const HOST = expoHost || '192.168.12.152';
+export const HOST = '51013c60a56a.ngrok-free.app'; // Ngrok tunnel for device access
 
 /**
  * Server port for the preview and app endpoints.
@@ -24,7 +24,7 @@ export const PREVIEW_PATH = '/preview';
  * Base URI for preview endpoints, using the dynamic HOST and fixed PORT.
  * Used for external or network access to the preview server (e.g., in web or remote debugging).
  */
-export const BASE_URI = `http://${HOST}:${PORT}${PREVIEW_PATH}`;
+export const BASE_URI = `https://${HOST}${PREVIEW_PATH}`; // HTTPS via ngrok, no port
 
 /**
  * Localhost host for webview contexts in mobile apps.
@@ -37,7 +37,7 @@ const LOCAL_HOST = '127.0.0.1';
  * Mirrors BASE_URI structure but with local host for React Native webview compatibility.
  * Reduces redundancy by reusing PORT and PREVIEW_PATH.
  */
-export const WEBVIEW_URI = `http://${LOCAL_HOST}:${PORT}${PREVIEW_PATH}`;
+export const WEBVIEW_URI = `https://${HOST}${PREVIEW_PATH}`; // HTTPS via ngrok for device
 
 /**
  * Enum for supported page types in the app previews.
@@ -115,6 +115,33 @@ export const pageConfigs: Record<PageType, PageConfig> = {
 };
 
 /**
+ * Interface for app data used in native detail rendering.
+ */
+export interface AppData {
+  name: string;
+  description: string;
+  icon: any; // Image source
+  screenshots: string[]; // Image paths
+}
+
+/**
+ * Mock app data map by ID for native UI rendering.
+ * In production, fetch from API or backend.
+ */
+export const APP_DATA: Record<string, AppData> = {
+  '1': {
+    name: 'Sample App',
+    description: 'This is a sample app description for demonstration purposes. It showcases various features like previews and details.',
+    icon: require('../assets/images/icon.png'), // Use existing asset
+    screenshots: [
+      require('../assets/images/splash-icon.png'),
+      require('../assets/images/icon.png')
+    ]
+  }
+  // Add more entries as needed
+};
+
+/**
  * Generates a URI for a specific page type using BASE_URI.
  * Appends page-specific query from config, optional search query, and theme.
  * Used for external preview links.
@@ -173,7 +200,7 @@ export function getProfileUri(): string {
  * Base URI for app endpoints, excluding preview path.
  * Used for app-specific routes like /app/{id}.
  */
-export const APP_BASE = `http://${HOST}:${PORT}`;
+export const APP_BASE = `https://${HOST}`; // HTTPS via ngrok, no port
 
 /**
  * Generates URI for a specific app by ID using APP_BASE.
@@ -206,5 +233,78 @@ export function getWebViewAppDetailUri(id: string, theme?: 'light' | 'dark'): st
     base += `?theme=${theme}`;
   }
   return base;
+}
+
+/**
+ * Shared injected JavaScript for WebView to style body and remove margins/padding.
+ */
+export const INJECTED_JAVASCRIPT = `
+  (function() {
+    // Hide any web header/footer if they exist
+    const style = document.createElement('style');
+    style.textContent = \`
+      body { 
+        margin: 0; 
+        padding: 0;
+        height: 100vh;
+        overflow-y: auto;
+      }
+    \`;
+    document.head.appendChild(style);
+  })();
+  true;
+`;
+
+/**
+ * Common props shared across WebView instances.
+ * Excludes platform-specific or dynamic props.
+ */
+export const WEBVIEW_COMMON_PROPS = {
+  originWhitelist: ['*'],
+  mixedContentMode: 'compatibility' as const,
+  javaScriptEnabled: true,
+  allowsInlineMediaPlayback: true,
+  mediaPlaybackRequiresUserAction: false,
+  startInLoadingState: true,
+  scalesPageToFit: false,
+  setSupportMultipleWindows: false,
+  pullToRefreshEnabled: false
+};
+
+/**
+ * Shared style objects for WebView container and view.
+ * To be used with StyleSheet.create in components.
+ */
+export const SHARED_WEBVIEW_STYLES = {
+  container: {
+    flex: 1,
+  },
+  webView: {
+    flex: 1,
+  }
+};
+
+/**
+ * Factory function to create WebView event handlers.
+ * @param router - Expo router instance for navigation.
+ * @returns Handlers object with onShouldStartLoadWithRequest and onMessage.
+ */
+export function createWebViewHandlers(router: any) {
+  const handleShouldStartLoadWithRequest = (request: any) => {
+    const url = request.url;
+    console.log('App detail WebView navigation:', url);
+    // Allow all navigation for now
+    return true;
+  };
+
+  const onMessage = (event: any) => {
+    const data = event.nativeEvent.data;
+    console.log('Message from WebView:', data);
+    if (data === 'close') {
+      router.back();
+    }
+  };
+
+  return { onShouldStartLoadWithRequest: handleShouldStartLoadWithRequest, onMessage };
 }
 
