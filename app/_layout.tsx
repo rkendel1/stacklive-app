@@ -70,9 +70,9 @@ function RootLayoutNav() {
           <Stack.Screen 
             name="app-detail" 
             options={{ 
-              presentation: 'card',
+              presentation: 'fullScreenModal',
               headerShown: false,
-              animation: 'slide_from_right',
+              animation: 'slide_from_bottom',
               gestureEnabled: true,
             }} 
           />

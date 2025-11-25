@@ -36,8 +36,8 @@ export default function GenericPreviewScreen({ pageType, hideHeader }: Props) {
         if (APP_DETAIL_CONFIG.hideSearch) setHideSearchBar(true);
         if (APP_DETAIL_CONFIG.hideTabs) setHideUI(true);
         
-        // Use replace to completely replace the current screen
-        router.replace({
+        // Use push to show the full-screen modal overlay
+        router.push({
           pathname: '/app-detail',
           params: { id: appId }
         });
@@ -63,8 +63,8 @@ export default function GenericPreviewScreen({ pageType, hideHeader }: Props) {
           if (APP_DETAIL_CONFIG.hideSearch) setHideSearchBar(true);
           if (APP_DETAIL_CONFIG.hideTabs) setHideUI(true);
           
-          // Use replace to completely replace the current screen
-          router.replace({
+          // Use push to show the full-screen modal overlay
+          router.push({
             pathname: '/app-detail',
             params: { id: appId }
           });
