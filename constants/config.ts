@@ -322,3 +322,28 @@ export const APP_DETAIL_CONFIG = {
   height: undefined as number | undefined, // undefined for full flex, or e.g., 500 for fixed pixels
 } as const;
 
+/**
+ * Interface for splash page configuration.
+ * Centralizes settings like duration, colors, image handling for the WebView splash.
+ */
+export interface SplashConfig {
+  duration: number; // Auto-navigation delay in ms
+  backgroundColor: string; // Background color for HTML body
+  logoPath: string; // Relative path to logo asset for require
+  hasImages: boolean; // Enable/disable image display
+  animationDuration: number; // Fade-in animation time in ms
+}
+
+/**
+ * Centralized configuration for the splash page.
+ * Used by app/splash.tsx for dynamic HTML and timing.
+ * hasImages set to true as per requirements.
+ */
+export const splashConfig: SplashConfig = {
+  duration: 3000,
+  backgroundColor: '#000',
+  logoPath: '../assets/images/icon.png',
+  hasImages: true,
+  animationDuration: 1000,
+};
+

@@ -17,7 +17,7 @@ export {
 } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: '(tabs)',
+  initialRouteName: 'splash',
 };
 
 SplashScreen.preventAutoHideAsync();
@@ -65,6 +65,7 @@ function RootLayoutNav() {
       <NavigationThemeProvider value={theme}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="splash" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen 
             name="app-detail" 
