@@ -7,7 +7,7 @@ import Constants from 'expo-constants';
  */
 const hostUri = Constants.expoConfig?.hostUri;
 const expoHost = hostUri ? hostUri.split(':')[0] : undefined;
-export const HOST = '049b94b46e42.ngrok-free.app'; // Ngrok tunnel for device access
+export const HOST = '192.168.1.204'; // Ngrok tunnel for device access
 
 /**
  * Server port for the preview and app endpoints.
@@ -24,7 +24,7 @@ export const PREVIEW_PATH = '/preview';
  * Base URI for preview endpoints, using the dynamic HOST and fixed PORT.
  * Used for external or network access to the preview server (e.g., in web or remote debugging).
  */
-export const BASE_URI = `https://${HOST}${PREVIEW_PATH}`; // HTTPS via ngrok, no port
+export const BASE_URI = `http://${HOST}:${PORT}${PREVIEW_PATH}`; // HTTPS via ngrok, no port
 
 /**
  * Localhost host for webview contexts in mobile apps.
@@ -37,7 +37,7 @@ const LOCAL_HOST = '127.0.0.1';
  * Mirrors BASE_URI structure but with local host for React Native webview compatibility.
  * Reduces redundancy by reusing PORT and PREVIEW_PATH.
  */
-export const WEBVIEW_URI = `https://${HOST}${PREVIEW_PATH}`; // HTTPS via ngrok for device
+export const WEBVIEW_URI = `http://${HOST}:${PORT}${PREVIEW_PATH}`; // HTTPS via ngrok for device
 
 /**
  * Enum for supported page types in the app previews.
@@ -200,7 +200,7 @@ export function getProfileUri(): string {
  * Base URI for app endpoints, excluding preview path.
  * Used for app-specific routes like /app/{id}.
  */
-export const APP_BASE = `https://${HOST}`; // HTTPS via ngrok, no port
+export const APP_BASE = `http://${HOST}:${PORT}`; // HTTPS via ngrok, no port
 
 /**
  * Generates URI for a specific app by ID using APP_BASE.
