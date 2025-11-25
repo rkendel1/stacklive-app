@@ -1,6 +1,7 @@
 import { Text as ThemedText, View } from '@/components/Themed';
+import { useColorScheme } from '@/components/useColorScheme';
+import { getWebViewUri } from '@/constants/config';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { Platform, StyleSheet, Switch, Text, TouchableOpacity } from 'react-native';
 import { useHideUI } from '../contexts/HideUIContext';
@@ -16,10 +17,9 @@ interface UserApp {
 export default function ProfileScreen() {
   const router = useRouter();
   const { hideSearchBar, setHideSearchBar } = useHideUI();
+  const colorScheme = useColorScheme();
 
-const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
-const host = expoHost || '192.168.1.204'; // replace with your LAN IP if needed
-const uri = `http://${host}:3000/preview?view=profile`;
+  const uri = getWebViewUri('profile', undefined, colorScheme ?? undefined);
 
   return (
     <View style={styles.container}>

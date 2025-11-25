@@ -1,4 +1,6 @@
 // app/_layout.tsx
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -42,9 +44,19 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  const colorScheme = useColorScheme();
+
+  const theme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      ...(colorScheme === 'dark' ? Colors.dark : Colors.light),
+    },
+  };
+
   return (
     <HideUIProvider>
-      <ThemeProvider value={DefaultTheme}>
+      <ThemeProvider value={theme}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen 

@@ -1,37 +1,11 @@
 import { View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
-import Constants from 'expo-constants';
+import { getWebViewUri, pageConfigs, type PageConfig, type PageType } from '@/constants/config';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
 import WebView from 'react-native-webview';
 import { useHideUI } from '../contexts/HideUIContext';
-
-type PageType = 'my-apps' | 'collections' | 'trending';
-
-interface PageConfig {
-  query: string;
-  placeholder: string;
-  title: string;
-}
-
-const pageConfigs: Record<PageType, PageConfig> = {
-  'my-apps': {
-    query: 'view=my-apps',
-    placeholder: 'Search my apps...',
-    title: 'My Apps Preview'
-  },
-  collections: {
-    query: 'view=lists',
-    placeholder: 'Search collections...',
-    title: 'Collections Preview'
-  },
-  trending: {
-    query: 'view=trending',
-    placeholder: 'Search trending...',
-    title: 'Trending Preview'
-  }
-};
 
 interface Props {
   pageType: PageType;
@@ -42,14 +16,11 @@ export default function GenericPreviewScreen({ pageType, hideHeader }: Props) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const colorScheme = useColorScheme();
-  const config = pageConfigs[pageType];
+  const config: PageConfig = pageConfigs[pageType];
   
   const { hideUI, hideSearchBar } = useHideUI();
 
-  const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
-  const host = expoHost || '192.168.1.204';
-  const baseUri = `http://${host}:3000/preview?${config.query}`;
-  const uri = searchQuery ? `${baseUri}&q=${encodeURIComponent(searchQuery)}` : baseUri;
+  const uri = getWebViewUri(pageType, searchQuery, colorScheme ? colorScheme as 'light' | 'dark' : undefined);
 
   const handleShouldStartLoadWithRequest = (request: any) => {
     const url = request.url;
@@ -100,7 +71,7 @@ export default function GenericPreviewScreen({ pageType, hideHeader }: Props) {
     <View style={styles.container}>
       {!hideUI && !hideHeader && (
         <View style={styles.headerContainer}>
-          {!hideSearchBar && (
+          {config.hasSearch && !hideSearchBar && (
             <TextInput
               style={[
                 styles.searchInput, 
@@ -115,14 +86,16 @@ export default function GenericPreviewScreen({ pageType, hideHeader }: Props) {
               onChangeText={setSearchQuery}
             />
           )}
-          <TouchableOpacity style={styles.profileContainer} onPress={() => router.push('/profile')}>
-            <View style={[
-              styles.profileAvatar, 
-              { backgroundColor: colorScheme === 'dark' ? '#333' : '#f0f0f0' }
-            ]}>
-              <Text style={styles.avatarText}>U</Text>
-            </View>
-          </TouchableOpacity>
+          {config.hasAvatar && (
+            <TouchableOpacity style={styles.profileContainer} onPress={() => router.push('/profile')}>
+              <View style={[
+                styles.profileAvatar, 
+                { backgroundColor: colorScheme === 'dark' ? '#333' : '#f0f0f0' }
+              ]}>
+                <Text style={styles.avatarText}>U</Text>
+              </View>
+            </TouchableOpacity>
+          )}
         </View>
       )}
       
@@ -134,23 +107,28 @@ export default function GenericPreviewScreen({ pageType, hideHeader }: Props) {
             title={config.title}
           />
         ) : (
-          <WebView
-            source={{ uri }}
-            style={styles.webView}
-            originWhitelist={['*']}
-            mixedContentMode="compatibility"
-            javaScriptEnabled={true}
-            allowsInlineMediaPlayback={true}
-            mediaPlaybackRequiresUserAction={false}
-            startInLoadingState={true}
-            bounces={Platform.OS === 'ios'}
-            scrollEnabled={true}
-            scalesPageToFit={false}
-            injectedJavaScript="document.documentElement.style.height = '100vh'; document.body.style.height = '100vh'; document.body.style.overflowY = 'scroll'; true;"
-            onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
-            onNavigationStateChange={handleNavigationStateChange}
-            setSupportMultipleWindows={false}
-          />
+            <WebView
+              source={{ uri }}
+              style={styles.webView}
+              originWhitelist={['*']}
+              mixedContentMode="compatibility"
+              javaScriptEnabled={true}
+              allowsInlineMediaPlayback={true}
+              mediaPlaybackRequiresUserAction={false}
+              startInLoadingState={true}
+              bounces={Platform.OS === 'ios'}
+              scrollEnabled={true}
+              scalesPageToFit={false}
+              injectedJavaScript={`(function() {
+                ${colorScheme === 'dark' ? "document.documentElement.classList.add('dark'); document.body.classList.add('dark');" : ''}
+                document.documentElement.style.height = '100vh';
+                document.body.style.height = '100vh';
+                document.body.style.overflowY = 'scroll';
+              })(); true;`}
+              onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
+              onNavigationStateChange={handleNavigationStateChange}
+              setSupportMultipleWindows={false}
+            />
         )}
       </View>
     </View>

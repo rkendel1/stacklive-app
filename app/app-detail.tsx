@@ -1,5 +1,5 @@
 import { useColorScheme } from '@/components/useColorScheme';
-import Constants from 'expo-constants';
+import { getWebViewAppDetailUri } from '@/constants/config';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
@@ -20,9 +20,7 @@ export default function AppDetailScreen() {
     }, [setHideUI])
   );
 
-  const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
-  const host = expoHost || '192.168.1.204';
-  const uri = `http://${host}:3000/preview/app/${id}`;
+  const uri = getWebViewAppDetailUri(id, colorScheme ? colorScheme as 'light' | 'dark' : undefined);
 
   // Inject JavaScript to hide any elements you want (if needed)
   const injectedJavaScript = `
