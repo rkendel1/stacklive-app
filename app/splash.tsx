@@ -36,7 +36,6 @@ const splashHTML = `
       to { opacity: 1; } 
     }
   </style>
-  <script src="http://127.0.0.1:32100/embed.js" data-token="a9e921fd-81ec-4338-9898-92418893e7ff" data-host="http://127.0.0.1:32100" defer></script>
 </head>
 <body>
   ${splashConfig.hasImages ? `<img src="${iconUri}" alt="Splash Logo">` : ''}
