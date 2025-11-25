@@ -3,8 +3,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { getWebViewUri } from '@/constants/config';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
-import { Platform, StyleSheet, Switch, Text, TouchableOpacity } from 'react-native';
-import { useHideUI } from '../contexts/HideUIContext';
+import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
 
 import WebView from 'react-native-webview';
 
@@ -16,7 +15,6 @@ interface UserApp {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { hideSearchBar, setHideSearchBar } = useHideUI();
   const colorScheme = useColorScheme();
 
   const uri = getWebViewUri('profile', undefined, colorScheme ?? undefined);
@@ -30,11 +28,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle}>Profile</ThemedText>
         <View style={styles.headerSpacer} />
-      </View>
-
-      <View style={styles.settingSection}>
-        <Text style={styles.settingLabel}>Hide Search Bar</Text>
-        <Switch value={hideSearchBar} onValueChange={setHideSearchBar} />
       </View>
 
       <WebView

@@ -7,13 +7,13 @@ import Constants from 'expo-constants';
  */
 const hostUri = Constants.expoConfig?.hostUri;
 const expoHost = hostUri ? hostUri.split(':')[0] : undefined;
-export const HOST = '51013c60a56a.ngrok-free.app'; // Ngrok tunnel for device access
+export const HOST = '049b94b46e42.ngrok-free.app'; // Ngrok tunnel for device access
 
 /**
  * Server port for the preview and app endpoints.
  * Fixed at 32100 for consistency in development.
  */
-export const PORT = 32100;
+export const PORT = 3000;
 /**
  * Base path for all preview endpoints.
  * Appended to host:port to form preview URIs.
@@ -307,4 +307,18 @@ export function createWebViewHandlers(router: any) {
 
   return { onShouldStartLoadWithRequest: handleShouldStartLoadWithRequest, onMessage };
 }
+
+/**
+ * Configuration for app detail page behavior and appearance.
+ * Controls hiding of UI elements, presentation type, animation, and height.
+ * Defaults to full screen modal with all hiding enabled.
+ */
+export const APP_DETAIL_CONFIG = {
+  hideSearch: true,
+  hideHeader: true,
+  hideTabs: true,
+  type: 'fullScreenModal' as 'fullScreenModal' | 'modal' | 'card' | 'transparentModal',
+  animation: 'slide_from_bottom' as 'slide_from_bottom' | 'fade' | 'flip' | 'none',
+  height: undefined as number | undefined, // undefined for full flex, or e.g., 500 for fixed pixels
+} as const;
 

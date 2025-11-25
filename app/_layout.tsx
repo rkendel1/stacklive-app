@@ -1,6 +1,7 @@
 // app/_layout.tsx
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { APP_DETAIL_CONFIG } from '@/constants/config';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -8,6 +9,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { HideUIProvider } from '../contexts/HideUIContext';
 import { ThemeProvider as ThemeOverrideProvider } from '../contexts/ThemeContext';
 
@@ -62,24 +64,26 @@ function RootLayoutNav() {
   return (
     <HideUIProvider>
       <NavigationThemeProvider value={theme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="app-detail" 
-          options={{ 
-            presentation: 'fullScreenModal',
-            headerShown: false,
-            animation: 'slide_from_bottom'
-          }} 
-        />
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen 
-            name="profile" 
+            name="app-detail" 
             options={{ 
-              presentation: 'modal', 
-              headerShown: false 
+              presentation: APP_DETAIL_CONFIG.type,
+              headerShown: false,
+              animation: APP_DETAIL_CONFIG.animation
             }} 
           />
-        </Stack>
+            <Stack.Screen 
+              name="profile" 
+              options={{ 
+                presentation: 'modal', 
+                headerShown: false 
+              }} 
+            />
+          </Stack>
+        </GestureHandlerRootView>
       </NavigationThemeProvider>
     </HideUIProvider>
   );

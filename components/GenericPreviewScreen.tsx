@@ -1,6 +1,6 @@
 import { View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
-import { getWebViewUri, pageConfigs, type PageConfig, type PageType } from '@/constants/config';
+import { APP_DETAIL_CONFIG, getWebViewUri, pageConfigs, type PageConfig, type PageType } from '@/constants/config';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
@@ -18,7 +18,7 @@ export default function GenericPreviewScreen({ pageType, hideHeader }: Props) {
   const colorScheme = useColorScheme();
   const config: PageConfig = pageConfigs[pageType];
   
-  const { hideUI, hideSearchBar } = useHideUI();
+  const { hideUI, hideSearchBar, setHideUI, setHideSearchBar } = useHideUI();
 
   const uri = getWebViewUri(pageType, searchQuery, colorScheme ? colorScheme as 'light' | 'dark' : undefined);
 
@@ -32,6 +32,9 @@ export default function GenericPreviewScreen({ pageType, hideHeader }: Props) {
       if (match) {
         const appId = match[1];
         console.log('Intercepting navigation to app:', appId);
+        
+        if (APP_DETAIL_CONFIG.hideSearch) setHideSearchBar(true);
+        if (APP_DETAIL_CONFIG.hideTabs) setHideUI(true);
         
         // ✅ FIXED: Use object with pathname and params
         router.push({
@@ -56,6 +59,9 @@ export default function GenericPreviewScreen({ pageType, hideHeader }: Props) {
         if (match) {
           const appId = match[1];
           console.log('Intercepting via navigationStateChange:', appId);
+          
+          if (APP_DETAIL_CONFIG.hideSearch) setHideSearchBar(true);
+          if (APP_DETAIL_CONFIG.hideTabs) setHideUI(true);
           
           // ✅ FIXED: Use object with pathname and params
           router.push({

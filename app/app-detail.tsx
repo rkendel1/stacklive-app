@@ -1,7 +1,7 @@
 import AppScreenshotsCarousel from '@/components/AppScreenshotsCarousel';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { APP_DATA, INJECTED_JAVASCRIPT, SHARED_WEBVIEW_STYLES, WEBVIEW_COMMON_PROPS, createWebViewHandlers, getWebViewAppDetailUri } from '@/constants/config';
+import { APP_DATA, APP_DETAIL_CONFIG, INJECTED_JAVASCRIPT, SHARED_WEBVIEW_STYLES, WEBVIEW_COMMON_PROPS, createWebViewHandlers, getWebViewAppDetailUri } from '@/constants/config';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -13,13 +13,17 @@ export default function AppDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const { setHideUI } = useHideUI();
+  const { setHideUI, setHideSearchBar } = useHideUI();
 
   useFocusEffect(
     useCallback(() => {
-      setHideUI(true);
-      return () => setHideUI(false);
-    }, [setHideUI])
+      setHideUI(APP_DETAIL_CONFIG.hideTabs);
+      setHideSearchBar(APP_DETAIL_CONFIG.hideSearch);
+      return () => {
+        setHideUI(false);
+        setHideSearchBar(false);
+      };
+    }, [setHideUI, setHideSearchBar])
   );
 
   if (!id) {
@@ -35,6 +39,10 @@ export default function AppDetailScreen() {
   const uri = getWebViewAppDetailUri(id as string, colorScheme ? colorScheme as 'light' | 'dark' : undefined);
   const colors = Colors[colorScheme || 'light'];
   const backgroundColor = colors.background;
+
+  const webviewContainerStyle = APP_DETAIL_CONFIG.height !== undefined 
+    ? { flex: 1, height: APP_DETAIL_CONFIG.height } 
+    : { flex: 1, minHeight: 300 };
 
   const styles = StyleSheet.create({
     ...SHARED_WEBVIEW_STYLES,
@@ -69,10 +77,7 @@ export default function AppDetailScreen() {
     screenshots: {
       padding: 16,
     },
-    webviewContainer: {
-      flex: 1,
-      minHeight: 300,
-    },
+    webviewContainer: webviewContainerStyle,
   });
 
   return (

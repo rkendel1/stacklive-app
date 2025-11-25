@@ -22,7 +22,7 @@ export default function TabLayout() {
 
   const tabBarStyle = hideUI ? { display: 'none' as const } : {
     backgroundColor: '#f8f9fa',
-    height: 60 + insets.bottom,
+    height: 60,
     paddingBottom: insets.bottom,
   };
 
