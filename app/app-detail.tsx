@@ -46,24 +46,19 @@ export default function AppDetailScreen() {
   const appData = APP_DATA[id as string];
   const app = allApps.find((a: MiniApp) => a.id === id) || appData;
 
-  if (!app) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>App not found</Text>
-      </View>
-    );
-  }
-
   const isMiniApp = (obj: MiniApp | AppData | undefined): obj is MiniApp => Boolean(obj && 'category' in obj);
   const miniApp = isMiniApp(app) ? app : undefined;
 
-  const IconComponent = getIconComponent(app.icon);
+  const IconComponent = getIconComponent(app?.icon || 'default');
   const handlers = createWebViewHandlers(router);
   const uri = getWebViewAppDetailUri(id as string, colorScheme ? colorScheme as 'light' | 'dark' : undefined);
   const colors = Colors[colorScheme || 'light'];
   const backgroundColor = colors.background;
   const toggleFavorite = () => setIsFavorite(!isFavorite);
-  const openWebView = () => setWebViewVisible(true);
+  const openWebView = () => {
+    const webviewUrl = miniApp?.launchUrl ? `${miniApp.launchUrl}=webview` : uri;
+    setWebViewVisible(true);
+  };
   const closeWebView = () => setWebViewVisible(false);
 
   const webviewContainerStyle = APP_DETAIL_CONFIG.height !== undefined 
@@ -333,6 +328,22 @@ export default function AppDetailScreen() {
     },
   });
 
+  if (!app) {
+    return (
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>App Detail</Text>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ fontSize: 18, color: colors.text }}>App not found</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <View style={styles.fullScreenOverlay}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -341,7 +352,7 @@ export default function AppDetailScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{app.name}</Text>
+          <Text style={styles.headerTitle}>{app?.name || 'App Detail'}</Text>
           <TouchableOpacity style={styles.starButton} onPress={toggleFavorite}>
             <Ionicons name={isFavorite ? "star" : "star-outline"} size={24} color={isFavorite ? "#FFD700" : colors.text} />
           </TouchableOpacity>
@@ -483,23 +494,14 @@ export default function AppDetailScreen() {
         presentationStyle="fullScreen"
         onRequestClose={closeWebView}
       >
-        <SafeAreaView style={styles.webViewModal} edges={['top']}>
-          <View style={styles.webViewHeader}>
-            <TouchableOpacity style={styles.webViewBack} onPress={closeWebView}>
-              <Ionicons name="arrow-back" size={24} color={colors.text} />
-            </TouchableOpacity>
-            <Text style={styles.webViewTitle}>{app.name}</Text>
-            <TouchableOpacity style={styles.webViewClose} onPress={closeWebView}>
-              <Ionicons name="close" size={24} color={colors.text} />
-            </TouchableOpacity>
-          </View>
+        <SafeAreaView style={styles.webViewModal} edges={['top', 'bottom']}>
           <WebView
-            source={{ uri: miniApp?.launchUrl || uri }}
+            source={{ uri: miniApp?.launchUrl ? `${miniApp.launchUrl}=webview` : uri }}
             style={{ flex: 1 }}
             bounces={Platform.OS === 'ios'}
             scrollEnabled={true}
             onShouldStartLoadWithRequest={(request) => {
-              if (request.url !== (miniApp?.launchUrl || uri)) {
+              if (request.url !== (miniApp?.launchUrl ? `${miniApp.launchUrl}=webview` : uri)) {
                 return false;
               }
               return true;
