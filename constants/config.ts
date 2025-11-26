@@ -287,6 +287,11 @@ export interface SplashConfig {
 }
 
 /**
+ * Base URL for API endpoints (uses same base as app).
+ */
+export const API_BASE = APP_BASE;
+
+/**
  * Configuration for the splash page.
  */
 export const splashConfig: SplashConfig = {

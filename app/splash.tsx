@@ -3,12 +3,16 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useRef, useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 let iconUri: string | undefined;
 if (splashConfig.hasImages) {
-  iconUri = Image.resolveAssetSource(require('../assets/images/icon.png')).uri;
+  if (Platform.OS === 'web') {
+    iconUri = '/assets/images/icon.png';
+  } else {
+    iconUri = Image.resolveAssetSource(require('../assets/images/icon.png')).uri;
+  }
 }
 
 // First-time splash HTML (beautiful brand visual + tagline)

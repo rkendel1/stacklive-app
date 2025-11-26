@@ -27,7 +27,7 @@ export default function AccountBanner({
 
   return (
     <TouchableOpacity
-      style={[styles.container, { paddingBottom: 8 + (insets.bottom > 0 ? 0 : 8) }, { bottom: insets.bottom + 60 }]}
+      style={[styles.container, { paddingBottom: 8 + (insets.bottom > 0 ? 0 : 8) }, { bottom: insets.bottom + 65 }]}
       onPress={onPress}
       activeOpacity={0.9}
     >
