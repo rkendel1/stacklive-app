@@ -1,4 +1,5 @@
 import AppCard from '@/components/AppCard';
+import SignUpModal from '@/components/SignUpModal';
 import { useColorScheme } from '@/components/useColorScheme';
 import { pageConfigs } from '@/constants/config';
 import { getIconComponent } from '@/constants/nativeIcons';
@@ -6,13 +7,14 @@ import { useTrendingApps as useAppsData } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const { allApps, curation, loading, error } = useAppsData();
   const colorScheme = useColorScheme();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   const getHydratedApps = (ids: string[]): MiniApp[] => {
     if (!allApps || !ids.length) return [];
@@ -53,14 +55,16 @@ export default function HomeScreen() {
 
     const renderItem = ({ item }: { item: MiniApp }) => (
       <View className={isFeatured ? "w-full" : "w-1/2 p-2"}>
-        <AppCard app={item} size={isFeatured ? "large" : "small"} />
+        <AppCard app={item} size={isFeatured ? "large" : "small"} onPress={() => router.push(`/app-detail?id=${item.id}`)} />
       </View>
     );
 
     const ItemSeparatorComponent = undefined;
 
+    const screenWidth = Dimensions.get('window').width;
+
     return (
-      <View className="mx-4 my-4 bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden mb-6">
+      <View className="mx-4 my-4 bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-100 dark:border-gray-800 overflow-hidden mb-6">
         <View className="flex-row justify-between items-center mb-2 px-4 pt-4">
           <Text className="text-lg font-semibold dark:text-white">{title}</Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/trending')}>
@@ -69,18 +73,21 @@ export default function HomeScreen() {
         </View>
         {apps.length === 0 ? (
           <Text className="text-gray-500 dark:text-gray-400 text-center py-4">No {title.toLowerCase()} apps available</Text>
+        ) : isFeatured ? (
+          <View className="px-4 pb-4">
+            <AppCard app={apps[0]} size="large" onPress={() => router.push(`/app-detail?id=${apps[0].id}`)} />
+          </View>
         ) : (
           <FlatList
-            data={apps.slice(0, 5)}
+            data={apps.slice(0, 4)}
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
-            horizontal={isFeatured}
-            pagingEnabled={isFeatured}
-            numColumns={isNewThisWeek ? 2 : undefined}
+            horizontal={false}
+            numColumns={2}
             ItemSeparatorComponent={ItemSeparatorComponent}
             showsHorizontalScrollIndicator={false}
-            className={isNewThisWeek ? "p-4 pb-4" : "h-72 mb-8"}
-            contentContainerStyle={isNewThisWeek ? { columnGap: 16, rowGap: 8 } : undefined}
+            className="p-4 pb-4"
+            contentContainerStyle={{ columnGap: 16, rowGap: 12, paddingHorizontal: 16 }}
           />
         )}
       </View>
@@ -93,7 +100,7 @@ export default function HomeScreen() {
       <View className="flex-1 bg-white dark:bg-black">
         <View className="flex-row items-center p-4 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-700">
           <TextInput
-            className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white mr-4"
+            className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white mr-4 shadow-sm"
             placeholder={homeConfig.placeholder}
             placeholderTextColor="gray"
             value={searchQuery}
@@ -105,7 +112,7 @@ export default function HomeScreen() {
         </View>
         <FlatList
           data={filteredApps}
-          renderItem={({ item }) => <AppCard app={item} size="small" />}
+          renderItem={({ item }) => <AppCard app={item} size="small" onPress={() => router.push(`/app-detail?id=${item.id}`)} />}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           className="p-2"
@@ -117,12 +124,13 @@ export default function HomeScreen() {
     );
   }
   const UserIcon = getIconComponent('user') || (() => <Text>👤</Text>);
+  const ArrowIcon = getIconComponent('arrow-right') || (() => <Text className="text-white">→</Text>);
 
   return (
     <View className="flex-1 bg-white dark:bg-black">
       <View className="flex-row items-center p-4 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-700">
         <TextInput
-          className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white mr-4"
+          className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white mr-4 shadow-sm"
           placeholder={homeConfig.placeholder}
           placeholderTextColor="gray"
           value={searchQuery}
@@ -137,11 +145,23 @@ export default function HomeScreen() {
         {renderSection('New This Week', getHydratedApps(curation?.newThisWeekAppIds || []))}
       </View>
       <View className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-700">
-        <TouchableOpacity className="bg-blue-500 px-8 py-3 rounded-lg flex-row justify-center items-center">
+        <TouchableOpacity className="bg-gradient-to-r from-blue-500 to-indigo-600 px-8 py-4 rounded-lg flex-row justify-center items-center" onPress={() => setShowModal(true)}>
           <Text className="text-white font-semibold text-sm mr-2">Complete your account to save</Text>
-          <Text className="text-white font-medium text-sm">Sign up +</Text>
+          <Text className="text-white font-medium text-sm mr-1">Sign up +</Text>
+          <ArrowIcon size={16} color="white" />
         </TouchableOpacity>
       </View>
+      <SignUpModal
+        visible={showModal}
+        onDismiss={() => setShowModal(false)}
+        onAppleSignIn={() => setShowModal(false)}
+        onGoogleSignIn={() => setShowModal(false)}
+        onEmailSignIn={(email) => setShowModal(false)}
+        onContinueAsGuest={() => setShowModal(false)}
+        title="Complete your account"
+        subtitle="to save apps"
+        incentive="Sign up +"
+      />
     </View>
   );
 }

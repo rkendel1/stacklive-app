@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
-    paddingBottom: 100, // Tab bar height (60px + ~23px safe area)
+    paddingBottom: 80, // Tab bar height (60px + ~23px safe area)
   },
   fullScreenContainer: {
     flex: 1,

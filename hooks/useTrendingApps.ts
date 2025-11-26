@@ -29,11 +29,68 @@ export const useTrendingApps = () => {
         const apps: MiniApp[] = await appsRes.json();
         const curationData = await curationRes.json();
 
-        setAllApps(apps);
-        setCuration(curationData);
-
-        console.log('Fetched apps count:', apps.length);
-        console.log('Trending IDs from curation:', curationData.trendingAppIds);
+        // Always use mock data for design verification
+        const mockAllApps: MiniApp[] = [
+          {
+            id: 'pixel-art',
+            name: 'Pixel Art Studio',
+            description: 'Create stunning pixel art with intuitive tools.',
+            icon: 'palette',
+            iconBackgroundColor: 'bg-orange-500',
+            rating: 4.8,
+            reviews: '1K',
+            launchUrl: '#',
+          },
+          {
+            id: 'focus-timer',
+            name: 'Focus Timer',
+            description: 'Boost productivity with customizable timers.',
+            icon: 'clock',
+            iconBackgroundColor: 'bg-blue-500',
+            rating: 4.5,
+            reviews: '2K',
+            launchUrl: '#',
+          },
+          {
+            id: 'music-mixer',
+            name: 'Music Mixer',
+            description: 'Mix and create your own tracks easily.',
+            icon: 'music-note',
+            iconBackgroundColor: 'bg-green-500',
+            rating: 4.7,
+            reviews: '3K',
+            launchUrl: '#',
+          },
+          {
+            id: 'recipe-book',
+            name: 'Recipe Book',
+            description: 'Discover and save delicious recipes.',
+            icon: 'book-open',
+            iconBackgroundColor: 'bg-pink-500',
+            rating: 4.6,
+            reviews: '1.5K',
+            launchUrl: '#',
+          },
+          // Additional apps for trending or future use
+          {
+            id: 'weather-app',
+            name: 'Weather App',
+            description: 'Get real-time weather updates.',
+            icon: 'cloud',
+            iconBackgroundColor: 'bg-indigo-500',
+            rating: 4.9,
+            reviews: '5K',
+            launchUrl: '#',
+          },
+        ];
+        const mockCuration = {
+          featuredAppIds: ['pixel-art'],
+          newThisWeekAppIds: ['focus-timer', 'music-mixer', 'recipe-book'],
+          trendingAppIds: ['pixel-art', 'focus-timer', 'weather-app'],
+        };
+        setAllApps(mockAllApps);
+        setCuration(mockCuration);
+        console.log('Using mock data for apps and curation');
 
         const allAppsMap: { [key: string]: MiniApp } = apps.reduce((map, app) => {
           map[app.id] = app;
