@@ -27,21 +27,10 @@ export default function OnboardingScreen() {
   }, [completeOnboarding]);
 
   const handleAppleSignIn = useCallback(async () => {
-    // In a real app, this would trigger Apple Sign-In
-    // For now, we'll simulate it
+    // TODO: Implement real Apple Sign-In using expo-apple-authentication
+    // For now, simulate sign-in for demo purposes
     if (Platform.OS === 'ios') {
       try {
-        // Real implementation would use expo-apple-authentication
-        // import * as AppleAuthentication from 'expo-apple-authentication';
-        // const credential = await AppleAuthentication.signInAsync({
-        //   requestedScopes: [
-        //     AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-        //     AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        //   ],
-        // });
-        // await signIn('apple', credential.fullName?.givenName || undefined, credential.email || undefined);
-        
-        // Simulated sign-in for demo
         await signIn('apple', 'User', undefined);
         setShowSignUpModal(false);
         router.replace('/(tabs)');
@@ -52,8 +41,8 @@ export default function OnboardingScreen() {
   }, [signIn, router]);
 
   const handleGoogleSignIn = useCallback(async () => {
-    // In a real app, this would trigger Google Sign-In
-    // For now, we'll simulate it
+    // TODO: Implement real Google Sign-In
+    // For now, simulate sign-in for demo purposes
     try {
       await signIn('google', 'User', undefined);
       setShowSignUpModal(false);
@@ -64,7 +53,8 @@ export default function OnboardingScreen() {
   }, [signIn, router]);
 
   const handleEmailSignIn = useCallback(async (email: string) => {
-    // In a real app, this would send a magic link/OTP
+    // TODO: Implement real email sign-in with magic link/OTP
+    // For now, simulate sign-in for demo purposes
     try {
       await signIn('email', undefined, email);
       setShowSignUpModal(false);

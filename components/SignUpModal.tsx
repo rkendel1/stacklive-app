@@ -55,8 +55,14 @@ export default function SignUpModal({
   const [showEmailInput, setShowEmailInput] = React.useState(false);
   const [email, setEmail] = React.useState('');
 
+  // Email validation regex pattern
+  const isValidEmail = (emailToValidate: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(emailToValidate.trim());
+  };
+
   const handleEmailSubmit = useCallback(() => {
-    if (email.trim() && email.includes('@')) {
+    if (isValidEmail(email)) {
       onEmailSignIn(email.trim());
       setShowEmailInput(false);
       setEmail('');

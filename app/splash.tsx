@@ -3,7 +3,7 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useRef, useState } from 'react';
-import { Image, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 let iconUri: string | undefined;
@@ -154,8 +154,8 @@ export default function Splash() {
   // Show loading state while onboarding context initializes
   if (isLoading || !initialized) {
     return (
-      <View style={{ flex: 1, backgroundColor: splashConfig.backgroundColor, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: '#fff' }}>Loading...</Text>
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -164,11 +164,11 @@ export default function Splash() {
   const splashHTML = isFirstLaunch ? firstTimeSplashHTML : returningSplashHTML;
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <WebView
         ref={webViewRef}
         source={{ html: splashHTML }}
-        style={{ flex: 1 }}
+        style={styles.webView}
         onLoad={handleLoad}
         scalesPageToFit={false}
         showsHorizontalScrollIndicator={false}
@@ -180,3 +180,21 @@ export default function Splash() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#fff',
+  },
+  webView: {
+    flex: 1,
+  },
+});

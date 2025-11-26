@@ -15,6 +15,8 @@ export const ONBOARDING_CONFIG = {
   reducedFrequencyDays: 2,
   /** Number of high-intent actions before prompting */
   highIntentActionsThreshold: 5,
+  /** Maximum prompts per day for high-intent users */
+  maxPromptsPerDay: 1,
 };
 
 interface OnboardingState {
@@ -114,10 +116,12 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const initSession = useCallback(async () => {
+    // Check if this is the first session before incrementing
+    const isFirstSession = state.sessionCount === 0;
     const newState = {
       ...state,
       sessionCount: state.sessionCount + 1,
-      isFirstLaunch: state.sessionCount === 0,
+      isFirstLaunch: isFirstSession,
     };
     setState(newState);
     await persistState(newState);
@@ -216,7 +220,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         
         const daysSinceLastPrompt = 
           (Date.now() - state.lastPromptTimestamp) / (1000 * 60 * 60 * 24);
-        return daysSinceLastPrompt >= 1;
+        return daysSinceLastPrompt >= ONBOARDING_CONFIG.maxPromptsPerDay;
       }
     }
     
