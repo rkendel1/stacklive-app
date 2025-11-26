@@ -1,9 +1,12 @@
 // app/(tabs)/_layout.tsx
+import AccountBanner from '@/components/AccountBanner';
+import SignUpModal from '@/components/SignUpModal';
 import { useColorScheme } from '@/components/useColorScheme';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
-import React from 'react';
-import { StyleSheet, Text } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHideUI } from '../../contexts/HideUIContext';
 
@@ -11,8 +14,63 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets();
   const { hideUI } = useHideUI();
+  const { 
+    hasAccount, 
+    hasCompletedOnboarding,
+    promptCount,
+    signIn, 
+    continueAsGuest,
+    recordPromptShown,
+  } = useOnboarding();
+
+  const [showSignUpModal, setShowSignUpModal] = useState(false);
 
   const activeColor = colorScheme === 'dark' ? 'white' : 'blue';
+
+  // Show banner for guest users who have completed onboarding but haven't signed up
+  const showAccountBanner = hasCompletedOnboarding && !hasAccount && !hideUI;
+  
+  // Use full-screen modal after 2+ dismissals
+  const useFullScreenModal = promptCount >= 2;
+
+  const handleBannerPress = useCallback(() => {
+    recordPromptShown();
+    setShowSignUpModal(true);
+  }, [recordPromptShown]);
+
+  const handleAppleSignIn = useCallback(async () => {
+    if (Platform.OS === 'ios') {
+      try {
+        await signIn('apple', 'User', undefined);
+        setShowSignUpModal(false);
+      } catch (error) {
+        console.error('Apple Sign-In error:', error);
+      }
+    }
+  }, [signIn]);
+
+  const handleGoogleSignIn = useCallback(async () => {
+    try {
+      await signIn('google', 'User', undefined);
+      setShowSignUpModal(false);
+    } catch (error) {
+      console.error('Google Sign-In error:', error);
+    }
+  }, [signIn]);
+
+  const handleEmailSignIn = useCallback(async (email: string) => {
+    try {
+      await signIn('email', undefined, email);
+      setShowSignUpModal(false);
+    } catch (error) {
+      console.error('Email Sign-In error:', error);
+    }
+  }, [signIn]);
+
+  const handleContinueAsGuest = useCallback(async () => {
+    await continueAsGuest();
+    setShowSignUpModal(false);
+  }, [continueAsGuest]);
 
   const styles = StyleSheet.create({
     container: {
@@ -27,63 +85,89 @@ export default function TabLayout() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: activeColor,
-          tabBarStyle,
-        }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: 'Home',
-            tabBarLabel: ({ focused }: { focused: boolean }) => (
-              <Text style={{ fontWeight: focused ? 'bold' : 'normal' }}>Home</Text>
-            ),
-            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
-              <FontAwesome name="home" size={24} color={focused ? activeColor : color} />
-            ),
+    <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
+        <Tabs
+          screenOptions={{
+            headerShown: false,
+            tabBarActiveTintColor: activeColor,
+            tabBarStyle,
           }}
-        />
-        <Tabs.Screen
-          name="trending"
-          options={{
-            title: 'Trending',
-            tabBarLabel: ({ focused }: { focused: boolean }) => (
-              <Text style={{ fontWeight: focused ? 'bold' : 'normal' }}>Trending</Text>
-            ),
-            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
-              <FontAwesome name="fire" size={24} color={focused ? activeColor : color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="my-apps"
-          options={{
-            title: 'My Apps',
-            tabBarLabel: ({ focused }: { focused: boolean }) => (
-              <Text style={{ fontWeight: focused ? 'bold' : 'normal' }}>My Apps</Text>
-            ),
-            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
-              <FontAwesome name="briefcase" size={24} color={focused ? activeColor : color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="collections"
-          options={{
-            title: 'Collections',
-            tabBarLabel: ({ focused }: { focused: boolean }) => (
-              <Text style={{ fontWeight: focused ? 'bold' : 'normal' }}>Collections</Text>
-            ),
-            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
-              <FontAwesome name="folder-o" size={24} color={focused ? activeColor : color} />
-            ),
-          }}
-        />
-      </Tabs>
-    </SafeAreaView>
+        >
+          <Tabs.Screen
+            name="index"
+            options={{
+              title: 'Home',
+              tabBarLabel: ({ focused }: { focused: boolean }) => (
+                <Text style={{ fontWeight: focused ? 'bold' : 'normal' }}>Home</Text>
+              ),
+              tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+                <FontAwesome name="home" size={24} color={focused ? activeColor : color} />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="trending"
+            options={{
+              title: 'Trending',
+              tabBarLabel: ({ focused }: { focused: boolean }) => (
+                <Text style={{ fontWeight: focused ? 'bold' : 'normal' }}>Trending</Text>
+              ),
+              tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+                <FontAwesome name="fire" size={24} color={focused ? activeColor : color} />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="my-apps"
+            options={{
+              title: 'My Apps',
+              tabBarLabel: ({ focused }: { focused: boolean }) => (
+                <Text style={{ fontWeight: focused ? 'bold' : 'normal' }}>My Apps</Text>
+              ),
+              tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+                <FontAwesome name="briefcase" size={24} color={focused ? activeColor : color} />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="collections"
+            options={{
+              title: 'Collections',
+              tabBarLabel: ({ focused }: { focused: boolean }) => (
+                <Text style={{ fontWeight: focused ? 'bold' : 'normal' }}>Collections</Text>
+              ),
+              tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+                <FontAwesome name="folder-o" size={24} color={focused ? activeColor : color} />
+              ),
+            }}
+          />
+        </Tabs>
+      </SafeAreaView>
+
+      {/* Account Banner for guest users */}
+      <AccountBanner
+        visible={showAccountBanner}
+        onPress={handleBannerPress}
+      />
+
+      {/* Sign-Up Modal */}
+      <SignUpModal
+        visible={showSignUpModal}
+        onDismiss={() => setShowSignUpModal(false)}
+        onAppleSignIn={handleAppleSignIn}
+        onGoogleSignIn={handleGoogleSignIn}
+        onEmailSignIn={handleEmailSignIn}
+        onContinueAsGuest={handleContinueAsGuest}
+        title={useFullScreenModal ? 'Unlock your experience' : 'Complete your account'}
+        subtitle={
+          useFullScreenModal 
+            ? 'Sign up to unlock unlimited likes, save your drafts, and get personalized recommendations.'
+            : 'Sign up to save your favorites and get personalized recommendations.'
+        }
+        incentive={useFullScreenModal ? '🔓 Unlock unlimited features' : '👥 Join 50M+ users'}
+        fullScreen={useFullScreenModal}
+      />
+    </View>
   );
 }
