@@ -1,16 +1,16 @@
 import { FontAwesome } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import {
-    Alert,
-    Dimensions,
-    Modal,
-    Platform,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
-    paddingBottom: 83, // Tab bar height (60px + ~23px safe area)
+    paddingBottom: 100, // Tab bar height (60px + ~23px safe area)
   },
   fullScreenContainer: {
     flex: 1,

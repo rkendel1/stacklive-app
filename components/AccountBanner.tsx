@@ -27,7 +27,7 @@ export default function AccountBanner({
 
   return (
     <TouchableOpacity
-      style={[styles.container, { paddingBottom: 8 + (insets.bottom > 0 ? 0 : 8) }]}
+      style={[styles.container, { paddingBottom: 8 + (insets.bottom > 0 ? 0 : 8) }, { bottom: insets.bottom + 60 }]}
       onPress={onPress}
       activeOpacity={0.9}
     >
@@ -42,7 +42,6 @@ export default function AccountBanner({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 70, // Above tab bar
     left: 16,
     right: 16,
     backgroundColor: '#4A90D9',

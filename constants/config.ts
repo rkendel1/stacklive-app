@@ -1,42 +1,44 @@
 /**
- * Server host configuration for development.
- * This should be your computer's local IP address to allow a mobile device
- * on the same network to connect.
+ * Dynamically determine the base URL for the app.
+ * This allows the native app to connect to either a local development server
+ * or a live production server without code changes.
  */
-export const HOST = '192.168.1.204'; 
+const DEV_HOST = '192.168.1.204';
+const DEV_PORT = 32100;
+
+// The `EXPO_PUBLIC_` prefix is required by Expo to expose the variable to your app's code.
+// In production, you will set this environment variable.
+// In development, it will be undefined, and we will fall back to the local dev server URL.
+const appBaseUrl = process.env.EXPO_PUBLIC_APP_URL || `http://${DEV_HOST}:${DEV_PORT}`;
 
 /**
- * Server port for the preview and app endpoints.
- * Fixed at 32100 for consistency in development.
+ * The base URL of your backend.
+ * e.g., 'https://stacklive.dev' in production or 'http://192.168.1.204:32100' in development.
  */
-export const PORT = 32100;
+export const APP_BASE = appBaseUrl.replace(/\/$/, ""); // Remove trailing slash if present
+
 /**
  * Base path for all preview endpoints.
- * Appended to host:port to form preview URIs.
  */
 export const PREVIEW_PATH = '/mobile-preview';
 
 /**
- * Base URI for preview endpoints, using the dynamic HOST and fixed PORT.
- * Used for external or network access to the preview server (e.g., in web or remote debugging).
+ * Full base URI for preview endpoints.
  */
-export const BASE_URI = `http://${HOST}:${PORT}${PREVIEW_PATH}`;
+export const BASE_URI = `${APP_BASE}${PREVIEW_PATH}`;
 
 /**
- * URI for webview previews, using the dynamic HOST to ensure accessibility from mobile webviews.
+ * URI for webview previews.
  */
-export const WEBVIEW_URI = `http://${HOST}:${PORT}${PREVIEW_PATH}`;
+export const WEBVIEW_URI = `${APP_BASE}${PREVIEW_PATH}`;
 
 /**
  * Enum for supported page types in the app previews.
- * Defines the different views that can be previewed (home, trending, etc.).
  */
 export type PageType = 'home' | 'trending' | 'my-apps' | 'collections' | 'profile';
 
 /**
  * Configuration interface for each page type.
- * Centralizes settings like search query params, UI placeholders, and component requirements.
- * Enables a configuration-driven approach for generating page URIs and UI elements.
  */
 export interface PageConfig {
   query: string;
@@ -50,9 +52,6 @@ export interface PageConfig {
 
 /**
  * Centralized configuration object for page types.
- * Maps each PageType to its specific config, including query params for URI building,
- * UI placeholders/titles, and flags for features like search or avatars.
- * This drives dynamic URI generation and UI rendering without hardcoding.
  */
 export const pageConfigs: Record<PageType, PageConfig> = {
   home: {
@@ -114,7 +113,6 @@ export interface AppData {
 
 /**
  * Mock app data map by ID for native UI rendering.
- * In production, fetch from API or backend.
  */
 export const APP_DATA: Record<string, AppData> = {
   '1': {
@@ -126,17 +124,10 @@ export const APP_DATA: Record<string, AppData> = {
       require('../assets/images/icon.png')
     ]
   }
-  // Add more entries as needed
 };
 
 /**
- * Generates a URI for a specific page type using BASE_URI.
- * Appends page-specific query from config, optional search query, and theme.
- * Used for external preview links.
- * @param pageType - The type of page to generate URI for.
- * @param searchQuery - Optional search term to encode in query.
- * @param theme - Optional light/dark theme param.
- * @returns Full URI string.
+ * Generates a URI for a specific page type.
  */
 export function getPageUri(pageType: PageType, searchQuery?: string, theme?: 'light' | 'dark'): string {
   const config = pageConfigs[pageType];
@@ -155,12 +146,7 @@ export function getPageUri(pageType: PageType, searchQuery?: string, theme?: 'li
 }
 
 /**
- * Generates a URI for webview context using WEBVIEW_URI (localhost).
- * Similar to getPageUri but for mobile webview access.
- * @param pageType - The type of page to generate URI for.
- * @param searchQuery - Optional search term to encode in query.
- * @param theme - Optional light/dark theme param.
- * @returns Full URI string for webview.
+ * Generates a URI for webview context.
  */
 export function getWebViewUri(pageType: PageType, searchQuery?: string, theme?: 'light' | 'dark'): string {
   const config = pageConfigs[pageType];
@@ -179,8 +165,7 @@ export function getWebViewUri(pageType: PageType, searchQuery?: string, theme?: 
 }
 
 /**
- * Generates URI for the profile view using BASE_URI.
- * @returns Profile preview URI.
+ * Generates URI for the profile view.
  */
 export function getProfileUri(): string {
   const url = new URL(BASE_URI);
@@ -189,35 +174,21 @@ export function getProfileUri(): string {
 }
 
 /**
- * Base URI for app endpoints, excluding preview path.
- * Used for app-specific routes like /app/{id}.
- */
-export const APP_BASE = `http://${HOST}:${PORT}`;
-
-/**
- * Generates URI for a specific app by ID using APP_BASE.
- * @param id - The app ID.
- * @returns App URI string.
+ * Generates URI for a specific app by ID.
  */
 export function getAppUri(id: string): string {
   return `${APP_BASE}/app/${id}`;
 }
 
 /**
- * Generates preview URI for an app detail by ID using BASE_URI.
- * @param id - The app ID.
- * @returns App detail preview URI.
+ * Generates preview URI for an app detail by ID.
  */
 export function getAppDetailUri(id: string): string {
   return `${APP_BASE}/app/${id}`;
 }
 
 /**
- * Generates webview URI for an app detail by ID using WEBVIEW_URI.
- * Supports optional theme param.
- * @param id - The app ID.
- * @param theme - Optional light/dark theme.
- * @returns Webview app detail URI.
+ * Generates webview URI for an app detail by ID.
  */
 export function getWebViewAppDetailUri(id: string, theme?: 'light' | 'dark'): string {
   const url = new URL(`${APP_BASE}/app/${id}`);
@@ -228,11 +199,10 @@ export function getWebViewAppDetailUri(id: string, theme?: 'light' | 'dark'): st
 }
 
 /**
- * Shared injected JavaScript for WebView to style body and remove margins/padding.
+ * Shared injected JavaScript for WebView.
  */
 export const INJECTED_JAVASCRIPT = `
   (function() {
-    // Hide any web header/footer if they exist
     const style = document.createElement('style');
     style.textContent = \`
       body { 
@@ -248,8 +218,7 @@ export const INJECTED_JAVASCRIPT = `
 `;
 
 /**
- * Common props shared across WebView instances.
- * Excludes platform-specific or dynamic props.
+ * Common props for WebView instances.
  */
 export const WEBVIEW_COMMON_PROPS = {
   originWhitelist: ['*'],
@@ -264,8 +233,7 @@ export const WEBVIEW_COMMON_PROPS = {
 };
 
 /**
- * Shared style objects for WebView container and view.
- * To be used with StyleSheet.create in components.
+ * Shared style objects for WebView.
  */
 export const SHARED_WEBVIEW_STYLES = {
   container: {
@@ -278,21 +246,16 @@ export const SHARED_WEBVIEW_STYLES = {
 
 /**
  * Factory function to create WebView event handlers.
- * @param router - Expo router instance for navigation.
- * @returns Handlers object with onShouldStartLoadWithRequest and onMessage.
  */
 export function createWebViewHandlers(router: any) {
   const handleShouldStartLoadWithRequest = (request: any) => {
-    const url = request.url;
-    console.log('App detail WebView navigation:', url);
-    // Allow all navigation for now
+    console.log('App detail WebView navigation:', request.url);
     return true;
   };
 
   const onMessage = (event: any) => {
-    const data = event.nativeEvent.data;
-    console.log('Message from WebView:', data);
-    if (data === 'close') {
+    console.log('Message from WebView:', event.nativeEvent.data);
+    if (event.nativeEvent.data === 'close') {
       router.back();
     }
   };
@@ -301,9 +264,7 @@ export function createWebViewHandlers(router: any) {
 }
 
 /**
- * Configuration for app detail page behavior and appearance.
- * Controls hiding of UI elements, presentation type, animation, and height.
- * Defaults to full screen modal with all hiding enabled.
+ * Configuration for app detail page.
  */
 export const APP_DETAIL_CONFIG = {
   hideSearch: true,
@@ -311,25 +272,22 @@ export const APP_DETAIL_CONFIG = {
   hideTabs: true,
   type: 'fullScreenModal' as 'fullScreenModal' | 'modal' | 'card' | 'transparentModal',
   animation: 'slide_from_bottom' as 'slide_from_bottom' | 'fade' | 'flip' | 'none',
-  height: undefined as number | undefined, // undefined for full flex, or e.g., 500 for fixed pixels
+  height: undefined as number | undefined,
 } as const;
 
 /**
  * Interface for splash page configuration.
- * Centralizes settings like duration, colors, image handling for the WebView splash.
  */
 export interface SplashConfig {
-  duration: number; // Auto-navigation delay in ms
-  backgroundColor: string; // Background color for HTML body
-  logoPath: string; // Relative path to logo asset for require
-  hasImages: boolean; // Enable/disable image display
-  animationDuration: number; // Fade-in animation time in ms
+  duration: number;
+  backgroundColor: string;
+  logoPath: string;
+  hasImages: boolean;
+  animationDuration: number;
 }
 
 /**
- * Centralized configuration for the splash page.
- * Used by app/splash.tsx for dynamic HTML and timing.
- * hasImages set to true as per requirements.
+ * Configuration for the splash page.
  */
 export const splashConfig: SplashConfig = {
   duration: 3000,
