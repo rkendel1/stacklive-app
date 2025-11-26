@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { HideUIProvider } from '../contexts/HideUIContext';
+import { OnboardingProvider } from '../contexts/OnboardingContext';
 import { ThemeProvider as ThemeOverrideProvider } from '../contexts/ThemeContext';
 
 export {
@@ -43,9 +44,11 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeOverrideProvider initialOverride="light">
-      <RootLayoutNav />
-    </ThemeOverrideProvider>
+    <OnboardingProvider>
+      <ThemeOverrideProvider initialOverride="light">
+        <RootLayoutNav />
+      </ThemeOverrideProvider>
+    </OnboardingProvider>
   );
 }
 
@@ -66,16 +69,32 @@ function RootLayoutNav() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="splash" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen 
-            name="app-detail" 
-            options={{ 
-              presentation: 'fullScreenModal',
-              headerShown: false,
-              animation: 'slide_from_bottom',
-              gestureEnabled: true,
-            }} 
-          />
+            <Stack.Screen 
+              name="onboarding" 
+              options={{ 
+                headerShown: false,
+                animation: 'fade',
+                gestureEnabled: false,
+              }} 
+            />
+            <Stack.Screen 
+              name="returning-prompt" 
+              options={{ 
+                headerShown: false,
+                animation: 'fade',
+                gestureEnabled: false,
+              }} 
+            />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen 
+              name="app-detail" 
+              options={{ 
+                presentation: 'fullScreenModal',
+                headerShown: false,
+                animation: 'slide_from_bottom',
+                gestureEnabled: true,
+              }} 
+            />
             <Stack.Screen 
               name="profile" 
               options={{ 
