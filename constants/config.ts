@@ -1,43 +1,31 @@
-import Constants from 'expo-constants';
-
 /**
- * Server host configuration derived from Expo constants.
- * Uses hostUri from expoConfig if available, otherwise falls back to a local network IP.
- * This allows dynamic host detection in development.
+ * Server host configuration for development.
+ * This should be your computer's local IP address to allow a mobile device
+ * on the same network to connect.
  */
-const hostUri = Constants.expoConfig?.hostUri;
-const expoHost = hostUri ? hostUri.split(':')[0] : undefined;
-export const HOST = '192.168.1.204'; // Ngrok tunnel for device access
+export const HOST = '192.168.1.204'; 
 
 /**
  * Server port for the preview and app endpoints.
  * Fixed at 32100 for consistency in development.
  */
-export const PORT = 3000;
+export const PORT = 32100;
 /**
  * Base path for all preview endpoints.
  * Appended to host:port to form preview URIs.
  */
-export const PREVIEW_PATH = '/preview';
+export const PREVIEW_PATH = '/mobile-preview';
 
 /**
  * Base URI for preview endpoints, using the dynamic HOST and fixed PORT.
  * Used for external or network access to the preview server (e.g., in web or remote debugging).
  */
-export const BASE_URI = `http://${HOST}:${PORT}${PREVIEW_PATH}`; // HTTPS via ngrok, no port
+export const BASE_URI = `http://${HOST}:${PORT}${PREVIEW_PATH}`;
 
 /**
- * Localhost host for webview contexts in mobile apps.
- * Uses 127.0.0.1 to access the local development server from within the app.
+ * URI for webview previews, using the dynamic HOST to ensure accessibility from mobile webviews.
  */
-const LOCAL_HOST = '127.0.0.1';
-
-/**
- * URI for webview previews, using localhost to ensure accessibility from mobile webviews.
- * Mirrors BASE_URI structure but with local host for React Native webview compatibility.
- * Reduces redundancy by reusing PORT and PREVIEW_PATH.
- */
-export const WEBVIEW_URI = `http://${HOST}:${PORT}${PREVIEW_PATH}`; // HTTPS via ngrok for device
+export const WEBVIEW_URI = `http://${HOST}:${PORT}${PREVIEW_PATH}`;
 
 /**
  * Enum for supported page types in the app previews.
@@ -152,17 +140,18 @@ export const APP_DATA: Record<string, AppData> = {
  */
 export function getPageUri(pageType: PageType, searchQuery?: string, theme?: 'light' | 'dark'): string {
   const config = pageConfigs[pageType];
-  let base = BASE_URI;
+  const url = new URL(BASE_URI);
   if (config.query) {
-    base += `?${config.query}`;
+    const [key, value] = config.query.split('=');
+    url.searchParams.set(key, value);
   }
   if (theme) {
-    base += `&theme=${theme}`;
+    url.searchParams.set('theme', theme);
   }
   if (searchQuery) {
-    base += `&q=${encodeURIComponent(searchQuery)}`;
+    url.searchParams.set('q', encodeURIComponent(searchQuery));
   }
-  return base;
+  return url.toString();
 }
 
 /**
@@ -175,17 +164,18 @@ export function getPageUri(pageType: PageType, searchQuery?: string, theme?: 'li
  */
 export function getWebViewUri(pageType: PageType, searchQuery?: string, theme?: 'light' | 'dark'): string {
   const config = pageConfigs[pageType];
-  let base = WEBVIEW_URI;
+  const url = new URL(WEBVIEW_URI);
   if (config.query) {
-    base += `?${config.query}`;
+    const [key, value] = config.query.split('=');
+    url.searchParams.set(key, value);
   }
   if (theme) {
-    base += `&theme=${theme}`;
+    url.searchParams.set('theme', theme);
   }
   if (searchQuery) {
-    base += `&q=${encodeURIComponent(searchQuery)}`;
+    url.searchParams.set('q', encodeURIComponent(searchQuery));
   }
-  return base;
+  return url.toString();
 }
 
 /**
@@ -193,14 +183,16 @@ export function getWebViewUri(pageType: PageType, searchQuery?: string, theme?: 
  * @returns Profile preview URI.
  */
 export function getProfileUri(): string {
-  return `${BASE_URI}?view=profile`;
+  const url = new URL(BASE_URI);
+  url.searchParams.set('view', 'profile');
+  return url.toString();
 }
 
 /**
  * Base URI for app endpoints, excluding preview path.
  * Used for app-specific routes like /app/{id}.
  */
-export const APP_BASE = `http://${HOST}:${PORT}`; // HTTPS via ngrok, no port
+export const APP_BASE = `http://${HOST}:${PORT}`;
 
 /**
  * Generates URI for a specific app by ID using APP_BASE.
@@ -217,7 +209,7 @@ export function getAppUri(id: string): string {
  * @returns App detail preview URI.
  */
 export function getAppDetailUri(id: string): string {
-  return `${BASE_URI}/app/${id}`;
+  return `${APP_BASE}/app/${id}`;
 }
 
 /**
@@ -228,11 +220,11 @@ export function getAppDetailUri(id: string): string {
  * @returns Webview app detail URI.
  */
 export function getWebViewAppDetailUri(id: string, theme?: 'light' | 'dark'): string {
-  let base = `${WEBVIEW_URI}/app/${id}`;
+  const url = new URL(`${APP_BASE}/app/${id}`);
   if (theme) {
-    base += `?theme=${theme}`;
+    url.searchParams.set('theme', theme);
   }
-  return base;
+  return url.toString();
 }
 
 /**
@@ -346,4 +338,3 @@ export const splashConfig: SplashConfig = {
   hasImages: true,
   animationDuration: 1000,
 };
-
