@@ -14,7 +14,7 @@ import { OnboardingProvider } from '../contexts/OnboardingContext';
 import { ThemeProvider as ThemeOverrideProvider } from '../contexts/ThemeContext';
 
 export {
-  ErrorBoundary
+    ErrorBoundary
 } from 'expo-router';
 
 export const unstable_settings = {
@@ -87,16 +87,7 @@ function RootLayoutNav() {
             />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen 
-              name="app-detail" 
-              options={{ 
-                presentation: 'fullScreenModal',
-                headerShown: false,
-                animation: 'slide_from_bottom',
-                gestureEnabled: true,
-              }} 
-            />
-            <Stack.Screen 
-              name="profile" 
+              name="profile"
               options={{ 
                 presentation: 'modal', 
                 headerShown: false 
