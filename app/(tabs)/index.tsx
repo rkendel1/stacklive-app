@@ -7,8 +7,8 @@ import { useTrendingApps as useAppsData } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { ActivityIndicator, Dimensions, FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const { allApps, curation, loading, error } = useAppsData();
@@ -16,6 +16,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
+  const carouselRef = useRef<FlatList>(null);
   const isDark = colorScheme === 'dark';
   const screenWidth = Dimensions.get('window').width;
 
@@ -168,6 +170,66 @@ export default function HomeScreen() {
     searchResultItem: {
       marginBottom: 12,
     },
+    // Featured carousel styles
+    featuredCarouselContainer: {
+      marginVertical: 12,
+    },
+    featuredSectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      marginBottom: 12,
+    },
+    featuredSectionTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: isDark ? '#fff' : '#000',
+    },
+    carouselContainer: {
+      paddingLeft: 16,
+    },
+    carouselItem: {
+      width: screenWidth - 48,
+      marginRight: 12,
+    },
+    carouselPagination: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 12,
+    },
+    paginationDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      marginHorizontal: 4,
+    },
+    paginationDotActive: {
+      backgroundColor: '#3b82f6',
+    },
+    paginationDotInactive: {
+      backgroundColor: isDark ? '#4b5563' : '#d1d5db',
+    },
+    // Compact apps section styles
+    compactSectionContainer: {
+      marginHorizontal: 16,
+      marginVertical: 12,
+    },
+    compactSectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    compactSectionTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: isDark ? '#fff' : '#000',
+    },
+    compactAppItem: {
+      marginBottom: 0,
+    },
   });
 
   if (loading) {
@@ -192,32 +254,109 @@ export default function HomeScreen() {
     app.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const renderSection = (title: string, apps: MiniApp[]) => {
-    const isFeatured = title === 'Featured';
+  // Get featured and other apps
+  const featuredApps = getHydratedApps(curation?.featuredAppIds || []);
+  const newThisWeekApps = getHydratedApps(curation?.newThisWeekAppIds || []);
+
+  // Handle carousel scroll to update pagination
+  const onCarouselScroll = (event: any) => {
+    const slideWidth = screenWidth - 48;
+    const offset = event.nativeEvent.contentOffset.x;
+    const newIndex = Math.round(offset / slideWidth);
+    if (newIndex !== activeCarouselIndex && newIndex >= 0 && newIndex < featuredApps.length) {
+      setActiveCarouselIndex(newIndex);
+    }
+  };
+
+  // Render featured apps carousel
+  const renderFeaturedCarousel = () => {
+    if (featuredApps.length === 0) {
+      return (
+        <View style={styles.featuredCarouselContainer}>
+          <View style={styles.featuredSectionHeader}>
+            <Text style={styles.featuredSectionTitle}>Featured</Text>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/trending')}>
+              <Text style={styles.seeAllText}>See all</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.emptyText}>No featured apps available</Text>
+        </View>
+      );
+    }
 
     return (
-      <View style={styles.sectionCard} key={title}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.featuredCarouselContainer}>
+        <View style={styles.featuredSectionHeader}>
+          <Text style={styles.featuredSectionTitle}>Featured</Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/trending')}>
             <Text style={styles.seeAllText}>See all</Text>
           </TouchableOpacity>
         </View>
-        {apps.length === 0 ? (
-          <Text style={styles.emptyText}>No {title.toLowerCase()} apps available</Text>
-        ) : isFeatured ? (
-          <View style={styles.sectionContent}>
-            <AppCard app={apps[0]} size="large" onPress={() => router.push(`/app-detail?id=${apps[0].id}`)} />
-          </View>
-        ) : (
-          <View style={styles.gridContainer}>
-            {apps.slice(0, 4).map((item) => (
-              <View key={item.id} style={styles.gridItem}>
-                <AppCard app={item} size="small" onPress={() => router.push(`/app-detail?id=${item.id}`)} />
-              </View>
+        <FlatList
+          ref={carouselRef}
+          data={featuredApps}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={onCarouselScroll}
+          scrollEventThrottle={16}
+          decelerationRate="fast"
+          snapToInterval={screenWidth - 48 + 12}
+          snapToAlignment="start"
+          contentContainerStyle={styles.carouselContainer}
+          renderItem={({ item }) => (
+            <View style={styles.carouselItem}>
+              <AppCard app={item} size="large" onPress={() => router.push(`/app-detail?id=${item.id}`)} />
+            </View>
+          )}
+          keyExtractor={(item) => item.id}
+        />
+        {featuredApps.length > 1 && (
+          <View style={styles.carouselPagination}>
+            {featuredApps.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.paginationDot,
+                  index === activeCarouselIndex ? styles.paginationDotActive : styles.paginationDotInactive,
+                ]}
+              />
             ))}
           </View>
         )}
+      </View>
+    );
+  };
+
+  // Render compact section for non-featured apps
+  const renderCompactSection = (title: string, apps: MiniApp[]) => {
+    if (apps.length === 0) {
+      return (
+        <View style={styles.compactSectionContainer} key={title}>
+          <View style={styles.compactSectionHeader}>
+            <Text style={styles.compactSectionTitle}>{title}</Text>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/trending')}>
+              <Text style={styles.seeAllText}>See all</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.emptyText}>No {title.toLowerCase()} apps available</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.compactSectionContainer} key={title}>
+        <View style={styles.compactSectionHeader}>
+          <Text style={styles.compactSectionTitle}>{title}</Text>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/trending')}>
+            <Text style={styles.seeAllText}>See all</Text>
+          </TouchableOpacity>
+        </View>
+        {apps.map((item) => (
+          <View key={item.id} style={styles.compactAppItem}>
+            <AppCard app={item} size="compact" onPress={() => router.push(`/app-detail?id=${item.id}`)} />
+          </View>
+        ))}
       </View>
     );
   };
@@ -246,7 +385,7 @@ export default function HomeScreen() {
           ) : (
             filteredApps.map((item) => (
               <View key={item.id} style={styles.searchResultItem}>
-                <AppCard app={item} size="small" onPress={() => router.push(`/app-detail?id=${item.id}`)} />
+                <AppCard app={item} size="compact" onPress={() => router.push(`/app-detail?id=${item.id}`)} />
               </View>
             ))
           )}
@@ -270,8 +409,8 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {renderSection('Featured', getHydratedApps(curation?.featuredAppIds || []))}
-        {renderSection('New This Week', getHydratedApps(curation?.newThisWeekAppIds || []))}
+        {renderFeaturedCarousel()}
+        {renderCompactSection('New This Week', newThisWeekApps)}
       </ScrollView>
       <View style={styles.bottomBar}>
         <TouchableOpacity onPress={() => setShowModal(true)}>

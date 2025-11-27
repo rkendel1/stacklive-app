@@ -7,7 +7,7 @@ import { useColorScheme } from './useColorScheme';
 interface AppCardProps {
   app: MiniApp;
   onPress?: () => void;
-  size?: 'small' | 'large';
+  size?: 'compact' | 'small' | 'large';
 }
 
 const getEmojiForIcon = (icon: string): string => {
@@ -36,24 +36,46 @@ const baseStyles = StyleSheet.create({
     width: '100%',
     marginBottom: 16,
   },
+  compactTouchable: {
+    width: '100%',
+    marginBottom: 12,
+  },
   contentContainer: {
     alignItems: 'center',
     width: '100%',
+  },
+  compactContentContainer: {
+    flex: 1,
+    justifyContent: 'center',
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
+  compactRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   stars: {
     color: '#fbbf24',
     fontWeight: 'bold',
     fontSize: 14,
   },
+  compactStars: {
+    color: '#fbbf24',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
   ratingText: {
     color: 'rgba(255,255,255,0.75)',
     marginLeft: 4,
     fontSize: 12,
+  },
+  compactRatingText: {
+    color: 'rgba(255,255,255,0.75)',
+    marginLeft: 4,
+    fontSize: 11,
   },
   openButton: {
     backgroundColor: 'rgba(255,255,255,0.25)',
@@ -62,10 +84,21 @@ const baseStyles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 8,
   },
+  compactOpenButton: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
   openButtonText: {
     color: '#ffffff',
     fontWeight: '600',
     fontSize: 14,
+  },
+  compactOpenButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 12,
   },
   description: {
     color: 'rgba(255,255,255,0.85)',
@@ -75,6 +108,12 @@ const baseStyles = StyleSheet.create({
     paddingHorizontal: 8,
     lineHeight: 20,
   },
+  compactDescription: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 12,
+    marginBottom: 4,
+    lineHeight: 16,
+  },
 });
 
 export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) {
@@ -83,6 +122,7 @@ export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) 
   const isDark = colorScheme === 'dark';
 
   const isLarge = size === 'large';
+  const isCompact = size === 'compact';
   const palette = ['orange', 'blue', 'green', 'purple', 'pink'];
   const hash = app.id.charCodeAt(0) % palette.length;
   const defaultColor = palette[hash];
@@ -90,7 +130,7 @@ export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) 
   const match = cardBg.match(/(\w+)-(\d+)/);
   const color = match ? match[1] : defaultColor;
 
-  const gradientColors: readonly string[] = isLarge 
+  const gradientColors: readonly [string, string] = isLarge 
     ? [colorMap[color]?.[400] || '#fed7aa', colorMap[color]?.[600] || '#ea580c']
     : [colorMap[color]?.[500] || '#f97316', colorMap[color]?.[600] || '#ea580c'];
 
@@ -116,48 +156,135 @@ export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) 
   };
 
   // Memoize dynamic styles based on props
-  const dynamicStyles = useMemo(() => ({
-    cardContainer: {
-      width: '100%' as const,
-      borderRadius: isLarge ? 24 : 16,
-      overflow: 'hidden' as const,
-      backgroundColor: isDark ? '#1f2937' : '#ffffff',
-      borderWidth: isLarge ? 0 : 1,
-      borderColor: isDark ? '#374151' : '#e5e7eb',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: isLarge ? 4 : 2 },
-      shadowOpacity: 0.15,
-      shadowRadius: isLarge ? 8 : 4,
-      elevation: isLarge ? 8 : 4,
-    },
-    gradient: {
-      width: '100%' as const,
-      padding: isLarge ? 24 : 16,
-      borderRadius: isLarge ? 24 : 16,
-      alignItems: 'center' as const,
-      minHeight: isLarge ? 280 : 180,
-      justifyContent: 'center' as const,
-    },
-    iconContainer: {
-      width: isLarge ? 80 : 56,
-      height: isLarge ? 80 : 56,
-      borderRadius: isLarge ? 40 : 28,
-      backgroundColor: 'rgba(255,255,255,0.25)',
-      justifyContent: 'center' as const,
-      alignItems: 'center' as const,
-      marginBottom: isLarge ? 16 : 12,
-    },
-    iconEmoji: {
-      fontSize: isLarge ? 36 : 28,
-    },
-    appName: {
-      fontWeight: '700' as const,
-      fontSize: isLarge ? 22 : 16,
-      color: '#ffffff',
-      textAlign: 'center' as const,
-      marginBottom: 4,
-    },
-  }), [isLarge, isDark]);
+  const dynamicStyles = useMemo(() => {
+    if (isCompact) {
+      return {
+        cardContainer: {
+          width: '100%' as const,
+          borderRadius: 12,
+          overflow: 'hidden' as const,
+          backgroundColor: isDark ? '#1f2937' : '#ffffff',
+          borderWidth: 1,
+          borderColor: isDark ? '#374151' : '#e5e7eb',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          elevation: 2,
+        },
+        gradient: {
+          width: '100%' as const,
+          paddingVertical: 12,
+          paddingHorizontal: 16,
+          borderRadius: 12,
+          flexDirection: 'row' as const,
+          alignItems: 'center' as const,
+          minHeight: 80, // About 1 inch tall
+        },
+        iconContainer: {
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          backgroundColor: 'rgba(255,255,255,0.25)',
+          justifyContent: 'center' as const,
+          alignItems: 'center' as const,
+          marginRight: 12,
+        },
+        iconEmoji: {
+          fontSize: 24,
+        },
+        appName: {
+          fontWeight: '700' as const,
+          fontSize: 15,
+          color: '#ffffff',
+          marginBottom: 2,
+        },
+      };
+    }
+    return {
+      cardContainer: {
+        width: '100%' as const,
+        borderRadius: isLarge ? 24 : 16,
+        overflow: 'hidden' as const,
+        backgroundColor: isDark ? '#1f2937' : '#ffffff',
+        borderWidth: isLarge ? 0 : 1,
+        borderColor: isDark ? '#374151' : '#e5e7eb',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: isLarge ? 4 : 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: isLarge ? 8 : 4,
+        elevation: isLarge ? 8 : 4,
+      },
+      gradient: {
+        width: '100%' as const,
+        padding: isLarge ? 24 : 16,
+        borderRadius: isLarge ? 24 : 16,
+        alignItems: 'center' as const,
+        minHeight: isLarge ? 280 : 180,
+        justifyContent: 'center' as const,
+      },
+      iconContainer: {
+        width: isLarge ? 80 : 56,
+        height: isLarge ? 80 : 56,
+        borderRadius: isLarge ? 40 : 28,
+        backgroundColor: 'rgba(255,255,255,0.25)',
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+        marginBottom: isLarge ? 16 : 12,
+      },
+      iconEmoji: {
+        fontSize: isLarge ? 36 : 28,
+      },
+      appName: {
+        fontWeight: '700' as const,
+        fontSize: isLarge ? 22 : 16,
+        color: '#ffffff',
+        textAlign: 'center' as const,
+        marginBottom: 4,
+      },
+    };
+  }, [isLarge, isCompact, isDark]);
+
+  // Render compact card layout (horizontal)
+  if (isCompact) {
+    return (
+      <TouchableOpacity 
+        style={baseStyles.compactTouchable}
+        onPress={handlePress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+      >
+        <Animated.View style={[dynamicStyles.cardContainer, { transform: [{ scale: scaleValue }] }]}>
+          <LinearGradient
+            colors={gradientColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={dynamicStyles.gradient}
+          >
+            <View style={dynamicStyles.iconContainer}>
+              <Text style={dynamicStyles.iconEmoji}>{getEmojiForIcon(app.icon)}</Text>
+            </View>
+            <View style={baseStyles.compactContentContainer}>
+              <Text style={dynamicStyles.appName} numberOfLines={1}>{app.name}</Text>
+              <Text style={baseStyles.compactDescription} numberOfLines={1} ellipsizeMode="tail">
+                {app.description}
+              </Text>
+              <View style={baseStyles.compactRatingRow}>
+                <Text style={baseStyles.compactStars}>
+                  {'★'.repeat(Math.floor(app.rating || 0))}{'☆'.repeat(5 - Math.floor(app.rating || 0))}
+                </Text>
+                <Text style={baseStyles.compactRatingText}>({app.rating?.toFixed(1) || 'N/A'})</Text>
+              </View>
+            </View>
+            <View style={baseStyles.compactOpenButton}>
+              <Text style={baseStyles.compactOpenButtonText}>Open</Text>
+            </View>
+          </LinearGradient>
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  }
 
   const cardContent = (
     <Animated.View style={[dynamicStyles.cardContainer, { transform: [{ scale: scaleValue }] }]}>
