@@ -1,4 +1,3 @@
-import React from 'react';
 
 export type MiniApp = {
   // --- Core Identifiers ---
@@ -16,7 +15,8 @@ export type MiniApp = {
   tags?: string[];            // An array of tags for searching and filtering (e.g., ['#Creative', "Editor's Choice"]).
   
   // --- App Store Details ---
-  launchUrl?: string;         // The URL to open when the app is launched.
+  deploymentUrl?: string;     // The base deployment URL for the app (used to derive launchUrl).
+  launchUrl?: string;         // The derived launch URL (automatically created from deploymentUrl + ?webview=true).
   rating?: number;            // The average user rating (e.g., 4.8).
   reviews?: string;           // The total number of reviews as a string (e.g., '12K').
   longDescription?: string;   // The detailed description for the app's detail page.

@@ -69,7 +69,6 @@ export default function TrendingScreen() {
       borderRadius: 20,
       justifyContent: 'center',
       alignItems: 'center',
-      marginRight: 12,
     },
     searchInput: {
       flex: 1,
@@ -79,6 +78,7 @@ export default function TrendingScreen() {
       borderRadius: 8,
       backgroundColor: isDark ? '#1f2937' : '#fff',
       color: isDark ? '#fff' : '#000',
+      marginRight: 16,
     },
     listHeader: {
       paddingHorizontal: 16,
@@ -149,9 +149,6 @@ export default function TrendingScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.searchHeader}>
-        <TouchableOpacity style={styles.userIconContainer} onPress={() => router.push('/profile')}>
-          <UserIcon size={20} color="#666" />
-        </TouchableOpacity>
         <TextInput
           style={styles.searchInput}
           placeholder="Search trending..."
@@ -159,6 +156,9 @@ export default function TrendingScreen() {
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
+        <TouchableOpacity style={styles.userIconContainer} onPress={() => router.push('/profile')}>
+          <UserIcon size={20} color="#666" />
+        </TouchableOpacity>
       </View>
       <FlatList
         data={filteredApps}

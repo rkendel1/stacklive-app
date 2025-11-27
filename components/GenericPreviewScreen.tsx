@@ -10,9 +10,10 @@ import { useHideUI } from '../contexts/HideUIContext';
 interface Props {
   pageType: PageType;
   hideHeader?: boolean;
+  externalSearchQuery?: string;
 }
 
-export default function GenericPreviewScreen({ pageType, hideHeader }: Props) {
+export default function GenericPreviewScreen({ pageType, hideHeader, externalSearchQuery }: Props) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const colorScheme = useColorScheme();
@@ -20,7 +21,7 @@ export default function GenericPreviewScreen({ pageType, hideHeader }: Props) {
   
   const { hideUI, hideSearchBar, setHideUI, setHideSearchBar } = useHideUI();
 
-  const uri = getWebViewUri(pageType, searchQuery, colorScheme ? colorScheme as 'light' | 'dark' : undefined);
+  const uri = getWebViewUri(pageType, externalSearchQuery ?? searchQuery, colorScheme ? colorScheme as 'light' | 'dark' : undefined);
 
   const handleShouldStartLoadWithRequest = (request: any) => {
     const url = request.url;

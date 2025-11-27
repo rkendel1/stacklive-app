@@ -420,7 +420,6 @@ export default function HomeScreen() {
             end={{ x: 1, y: 0 }}
             style={styles.signUpButton}
           >
-            <Text style={styles.signUpText}>Complete your account to save</Text>
             <Text style={styles.signUpText}>Sign up +</Text>
             <ArrowIcon size={16} color="white" />
           </LinearGradient>

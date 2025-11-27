@@ -1,14 +1,14 @@
 import AppScreenshotsCarousel from '@/components/AppScreenshotsCarousel';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { APP_DATA, APP_DETAIL_CONFIG, AppData, SHARED_WEBVIEW_STYLES, createWebViewHandlers, getWebViewAppDetailUri } from '@/constants/config';
+import { APP_DATA, APP_DETAIL_CONFIG, AppData, SHARED_WEBVIEW_STYLES, WEBVIEW_COMMON_PROPS, getWebViewAppDetailUri } from '@/constants/config';
 import { getIconComponent } from '@/constants/nativeIcons';
 import { useTrendingApps as useAppsData } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, FlatList, Modal, PanResponder, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, FlatList, Linking, PanResponder, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 import { useHideUI } from '../contexts/HideUIContext';
@@ -22,7 +22,44 @@ export default function AppDetailScreen() {
   const insets = useSafeAreaInsets();
   const { width, height } = Dimensions.get('window');
   const [isFavorite, setIsFavorite] = useState(false);
-  const [webViewVisible, setWebViewVisible] = useState(false);
+
+  // Swipe back animation
+  const DISMISS_THRESHOLD_RATIO = 0.25;
+  const translateY = useRef(new Animated.Value(0)).current;
+  const SWIPE_THRESHOLD = height * DISMISS_THRESHOLD_RATIO;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return gestureState.dy > 10 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          translateY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > SWIPE_THRESHOLD) {
+          Animated.timing(translateY, {
+            toValue: height,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => {
+            router.back();
+            translateY.setValue(0);
+          });
+        } else {
+          Animated.spring(translateY, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 100,
+            friction: 10,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
   useEffect(() => {
     setHideUI(APP_DETAIL_CONFIG.hideTabs);
@@ -50,100 +87,15 @@ export default function AppDetailScreen() {
   const miniApp = isMiniApp(app) ? app : undefined;
 
   const IconComponent = getIconComponent(app?.icon || 'default');
-  const handlers = createWebViewHandlers(router);
-  const uri = getWebViewAppDetailUri(id as string, colorScheme ? colorScheme as 'light' | 'dark' : undefined);
   const colors = Colors[colorScheme || 'light'];
   const backgroundColor = colors.background;
   const toggleFavorite = () => setIsFavorite(!isFavorite);
-  
-  // Animation for swipe-to-dismiss
-  const DISMISS_THRESHOLD_RATIO = 0.25; // Swipe 25% of screen height to dismiss
-  const translateY = useRef(new Animated.Value(0)).current;
-  const SWIPE_THRESHOLD = height * DISMISS_THRESHOLD_RATIO;
-  
-  // Build the webview URL with proper query parameter handling
-  const getWebViewUrl = (): string => {
-    if (miniApp?.launchUrl) {
-      try {
-        const url = new URL(miniApp.launchUrl);
-        url.searchParams.set('mode', 'webview');
-        return url.toString();
-      } catch {
-        // If URL parsing fails, fallback to simple append
-        const separator = miniApp.launchUrl.includes('?') ? '&' : '?';
-        return `${miniApp.launchUrl}${separator}mode=webview`;
-      }
-    }
-    return uri;
-  };
-  
-  // Validate if URL is safe to navigate
-  const isValidNavigationUrl = (url: string): boolean => {
-    try {
-      const parsedUrl = new URL(url);
-      // Allow http/https protocols
-      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-        return false;
-      }
-      // If we have a launchUrl, only allow navigation within the same origin
-      if (miniApp?.launchUrl) {
-        const launchOrigin = new URL(miniApp.launchUrl).origin;
-        if (parsedUrl.origin !== launchOrigin) {
-          return false;
-        }
-      }
-      return true;
-    } catch {
-      return false;
-    }
-  };
-  
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Only respond to vertical swipes down from top area
-        return gestureState.dy > 10 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
-      },
-      onPanResponderMove: (_, gestureState) => {
-        // Only allow downward movement
-        if (gestureState.dy > 0) {
-          translateY.setValue(gestureState.dy);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > SWIPE_THRESHOLD) {
-          // Dismiss the modal
-          Animated.timing(translateY, {
-            toValue: height,
-            duration: 200,
-            useNativeDriver: true,
-          }).start(() => {
-            closeWebView();
-            translateY.setValue(0);
-          });
-        } else {
-          // Snap back
-          Animated.spring(translateY, {
-            toValue: 0,
-            useNativeDriver: true,
-            tension: 100,
-            friction: 10,
-          }).start();
-        }
-      },
-    })
-  ).current;
-  
-  const openWebView = () => {
-    translateY.setValue(0);
-    setWebViewVisible(true);
-  };
-  const closeWebView = () => setWebViewVisible(false);
 
-  const webviewContainerStyle = APP_DETAIL_CONFIG.height !== undefined 
-    ? { flex: 1, height: APP_DETAIL_CONFIG.height } 
-    : { flex: 1, minHeight: 300 };
+  const launchApp = () => {
+    if (miniApp?.launchUrl) {
+      Linking.openURL(miniApp.launchUrl);
+    }
+  };
 
   const styles = StyleSheet.create({
     ...SHARED_WEBVIEW_STYLES,
@@ -182,6 +134,17 @@ export default function AppDetailScreen() {
     },
     scrollContent: {
       flexGrow: 1,
+    },
+    contentWrapper: {
+      flex: 1,
+      position: 'relative',
+    },
+    scrollView: {
+      flex: 1,
+    },
+    previewContainer: {
+      height: 400,
+      backgroundColor: colors.background,
     },
     appInfo: {
       padding: 16,
@@ -358,8 +321,12 @@ export default function AppDetailScreen() {
       fontSize: 14,
       color: colorScheme === 'dark' ? '#999' : '#666',
     },
-    webviewContainer: webviewContainerStyle,
     launchButtonContainer: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1,
       backgroundColor: colors.background,
       paddingHorizontal: 16,
       paddingBottom: insets.bottom + 16,
@@ -381,65 +348,6 @@ export default function AppDetailScreen() {
       fontWeight: '600',
       marginLeft: 8,
     },
-    webViewModal: {
-      flex: 1,
-      margin: 0,
-    },
-    webViewHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 16,
-      backgroundColor: colors.background,
-      borderBottomWidth: 1,
-      borderBottomColor: colorScheme === 'dark' ? '#333' : '#eee',
-    },
-    webViewBack: {
-      padding: 8,
-      marginRight: 8,
-    },
-    webViewTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: colors.text,
-      flex: 1,
-    },
-    webViewClose: {
-      padding: 8,
-    },
-    // Full screen mini app modal styles
-    miniAppModalContainer: {
-      flex: 1,
-      backgroundColor: '#000',
-    },
-    miniAppWebViewContainer: {
-      flex: 1,
-      width: width,
-      height: height,
-    },
-    miniAppCloseButton: {
-      position: 'absolute',
-      top: Platform.OS === 'ios' ? 50 : 20,
-      right: 16,
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1000,
-    },
-    swipeIndicator: {
-      position: 'absolute',
-      top: Platform.OS === 'ios' ? 10 : 6,
-      left: '50%',
-      // Center by offsetting half the width (40/2 = 20)
-      marginLeft: -20,
-      width: 40,
-      height: 5,
-      borderRadius: 2.5,
-      backgroundColor: 'rgba(255, 255, 255, 0.5)',
-      zIndex: 1000,
-    },
   });
 
   if (!app) {
@@ -459,7 +367,7 @@ export default function AppDetailScreen() {
   }
 
   return (
-    <View style={styles.fullScreenOverlay}>
+    <Animated.View style={[styles.fullScreenOverlay, { transform: [{ translateY }] }]} {...panResponder.panHandlers}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         {/* Header */}
         <View style={styles.header}>
@@ -473,182 +381,144 @@ export default function AppDetailScreen() {
         </View>
 
         {/* Content */}
-        <ScrollView style={styles.contentContainer} contentContainerStyle={styles.scrollContent}>
-          {/* App Info Section */}
-          <View style={styles.appInfo}>
-            <View style={styles.appHeader}>
-              <View style={styles.appIcon}>
-                <IconComponent size={48} color="#fff" />
-              </View>
-              <View style={styles.appDetails}>
-                <Text style={styles.appName}>{app.name}</Text>
-                <Text style={styles.appCategory}>{miniApp?.category || 'Uncategorized'}</Text>
-                <View style={styles.appStats}>
-                  <View style={styles.rating}>
-                    <View style={styles.averageStars}>
-                      {[...Array(5)].map((_, i) => (
-                        <Ionicons key={i} name={i < Math.floor(miniApp?.rating || 0) ? "star" : "star-outline"} size={16} color="#FFD700" />
-                      ))}
+        <View style={styles.contentWrapper}>
+          {/* Preview */}
+          <View style={styles.previewContainer}>
+            <WebView
+              source={{ uri: getWebViewAppDetailUri(id, colorScheme ?? 'light') }}
+              style={styles.webView}
+              {...WEBVIEW_COMMON_PROPS}
+            />
+          </View>
+
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+            {/* App Info Section */}
+            <View style={styles.appInfo}>
+              <View style={styles.appHeader}>
+                <View style={styles.appIcon}>
+                  <IconComponent size={48} color="#fff" />
+                </View>
+                <View style={styles.appDetails}>
+                  <Text style={styles.appName}>{app.name}</Text>
+                  <Text style={styles.appCategory}>{miniApp?.category || 'Uncategorized'}</Text>
+                  <View style={styles.appStats}>
+                    <View style={styles.rating}>
+                      <View style={styles.averageStars}>
+                        {[...Array(5)].map((_, i) => (
+                          <Ionicons key={i} name={i < Math.floor(miniApp?.rating || 0) ? "star" : "star-outline"} size={16} color="#FFD700" />
+                        ))}
+                      </View>
+                      <Text style={styles.ratingText}>{miniApp?.rating}</Text>
                     </View>
-                    <Text style={styles.ratingText}>{miniApp?.rating}</Text>
+                    <Text style={styles.userCount}>{miniApp?.reviews || '0'}</Text>
                   </View>
-                  <Text style={styles.userCount}>{miniApp?.reviews || '0'}</Text>
                 </View>
               </View>
             </View>
-          </View>
 
-          {/* Description */}
-          <Text style={styles.description}>
-            {miniApp?.longDescription || app.description}
-          </Text>
+            {/* Description */}
+            <Text style={styles.description}>
+              {miniApp?.longDescription || app.description}
+            </Text>
 
-          {/* Tags */}
-          <View style={styles.tagsContainer}>
-            {miniApp?.tags?.map((tag: string, index: number) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
-              </View>
-            ))}
-          </View>
+            {/* Tags */}
+            <View style={styles.tagsContainer}>
+              {miniApp?.tags?.map((tag: string, index: number) => (
+                <View key={index} style={styles.tag}>
+                  <Text style={styles.tagText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
 
-          {/* Features */}
-          {miniApp?.features && miniApp.features.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>Features</Text>
-              <FlatList
-                data={miniApp.features}
-                renderItem={({ item }: { item: { icon: string; title: string; description: string } }) => {
-                  const FeatureIcon = getIconComponent(item.icon) || (() => <Ionicons name="star" size={24} color="#fff" />);
+            {/* Features */}
+            {miniApp?.features && miniApp.features.length > 0 && (
+              <>
+                <Text style={styles.sectionTitle}>Features</Text>
+                <FlatList
+                  data={miniApp.features}
+                  renderItem={({ item }: { item: { icon: string; title: string; description: string } }) => {
+                    const FeatureIcon = getIconComponent(item.icon) || (() => <Ionicons name="star" size={24} color="#fff" />);
+                    return (
+                      <View style={styles.featureItem}>
+                        <View style={styles.featureIcon}>
+                          <FeatureIcon size={24} color="#fff" />
+                        </View>
+                        <View style={styles.featureDetails}>
+                          <Text style={styles.featureTitle}>{item.title}</Text>
+                          <Text style={styles.featureDesc}>{item.description}</Text>
+                        </View>
+                      </View>
+                    );
+                  }}
+                  keyExtractor={(item, index) => index.toString()}
+                  style={styles.featuresList}
+                />
+              </>
+            )}
+
+            {/* Ratings & Reviews */}
+            {miniApp?.ratingsAndReviews && miniApp.ratingsAndReviews.reviews.length > 0 && (
+              <>
+                <Text style={styles.sectionTitle}>Ratings & Reviews</Text>
+                {(() => {
+                  const { averageRating, totalReviews, reviews } = miniApp!.ratingsAndReviews;
                   return (
-                    <View style={styles.featureItem}>
-                      <View style={styles.featureIcon}>
-                        <FeatureIcon size={24} color="#fff" />
+                    <View style={styles.reviewsSection}>
+                      <View style={styles.reviewsHeader}>
+                        <View style={styles.averageRating}>
+                          <View style={styles.averageStars}>
+                            {[...Array(5)].map((_, i) => (
+                              <Ionicons key={i} name={i < Math.floor(averageRating) ? "star" : "star-outline"} size={16} color="#FFD700" />
+                            ))}
+                          </View>
+                          <Text style={styles.averageText}>{averageRating}</Text>
+                        </View>
+                        <Text style={styles.totalReviews}>{totalReviews}</Text>
                       </View>
-                      <View style={styles.featureDetails}>
-                        <Text style={styles.featureTitle}>{item.title}</Text>
-                        <Text style={styles.featureDesc}>{item.description}</Text>
-                      </View>
+                      <FlatList
+                        data={reviews.slice(0, 3)}
+                        renderItem={({ item }: { item: { avatar: string; name: string; rating: number; comment: string } }) => (
+                          <View style={styles.reviewItem}>
+                            <View style={styles.reviewHeader}>
+                              <View style={styles.reviewAvatar}>
+                                <Text style={{ fontSize: 14 }}>👤</Text>
+                              </View>
+                              <Text style={styles.reviewName}>{item.name}</Text>
+                              <View style={styles.reviewStars}>
+                                {[...Array(5)].map((_, i) => (
+                                  <Ionicons key={i} name={i < item.rating ? "star" : "star-outline"} size={12} color="#FFD700" />
+                                ))}
+                              </View>
+                            </View>
+                            <Text style={styles.reviewComment}>{item.comment}</Text>
+                          </View>
+                        )}
+                        keyExtractor={(item, index) => index.toString()}
+                      />
                     </View>
                   );
-                }}
-                keyExtractor={(item, index) => index.toString()}
-                style={styles.featuresList}
-              />
-            </>
-          )}
+                })()}
+              </>
+            )}
 
-          {/* Ratings & Reviews */}
-          {miniApp?.ratingsAndReviews && miniApp.ratingsAndReviews.reviews.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>Ratings & Reviews</Text>
-              {(() => {
-                const { averageRating, totalReviews, reviews } = miniApp!.ratingsAndReviews;
-                return (
-                  <View style={styles.reviewsSection}>
-                    <View style={styles.reviewsHeader}>
-                      <View style={styles.averageRating}>
-                        <View style={styles.averageStars}>
-                          {[...Array(5)].map((_, i) => (
-                            <Ionicons key={i} name={i < Math.floor(averageRating) ? "star" : "star-outline"} size={16} color="#FFD700" />
-                          ))}
-                        </View>
-                        <Text style={styles.averageText}>{averageRating}</Text>
-                      </View>
-                      <Text style={styles.totalReviews}>{totalReviews}</Text>
-                    </View>
-                    <FlatList
-                      data={reviews.slice(0, 3)}
-                      renderItem={({ item }: { item: { avatar: string; name: string; rating: number; comment: string } }) => (
-                        <View style={styles.reviewItem}>
-                          <View style={styles.reviewHeader}>
-                            <View style={styles.reviewAvatar}>
-                              <Text style={{ fontSize: 14 }}>👤</Text>
-                            </View>
-                            <Text style={styles.reviewName}>{item.name}</Text>
-                            <View style={styles.reviewStars}>
-                              {[...Array(5)].map((_, i) => (
-                                <Ionicons key={i} name={i < item.rating ? "star" : "star-outline"} size={12} color="#FFD700" />
-                              ))}
-                            </View>
-                          </View>
-                          <Text style={styles.reviewComment}>{item.comment}</Text>
-                        </View>
-                      )}
-                      keyExtractor={(item, index) => index.toString()}
-                    />
-                  </View>
-                );
-              })()}
-            </>
-          )}
+            {/* Screenshots Section */}
+            <Text style={styles.sectionTitle}>Screenshots</Text>
+            {app.screenshots && app.screenshots.length > 0 && (
+              <View style={styles.screenshots}>
+                <AppScreenshotsCarousel screenshots={app.screenshots} onClose={() => {}} />
+              </View>
+            )}
+          </ScrollView>
 
-          {/* Screenshots Section */}
-          <Text style={styles.sectionTitle}>Screenshots</Text>
-          {app.screenshots && app.screenshots.length > 0 && (
-            <View style={styles.screenshots}>
-              <AppScreenshotsCarousel screenshots={app.screenshots} onClose={() => {}} />
-            </View>
-          )}
-        </ScrollView>
-
-        {/* Launch App Button */}
-        <View style={styles.launchButtonContainer}>
-          <TouchableOpacity style={styles.launchButton} activeOpacity={0.8} onPress={openWebView}>
-            <Ionicons name="flash" size={24} color="white" />
-            <Text style={styles.launchButtonText}>Launch App</Text>
-          </TouchableOpacity>
+          {/* Launch App Button */}
+          <View style={styles.launchButtonContainer}>
+            <TouchableOpacity style={styles.launchButton} activeOpacity={0.8} onPress={launchApp}>
+              <Ionicons name="flash" size={24} color="white" />
+              <Text style={styles.launchButtonText}>Launch App</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaView>
-
-      {/* Mini App WebView Modal - Full Screen Overlay */}
-      <Modal
-        visible={webViewVisible}
-        animationType="slide"
-        presentationStyle="overFullScreen"
-        transparent={false}
-        statusBarTranslucent={true}
-        onRequestClose={closeWebView}
-      >
-        <View style={styles.miniAppModalContainer}>
-          <StatusBar hidden={true} />
-          <Animated.View 
-            style={[
-              styles.miniAppWebViewContainer, 
-              { transform: [{ translateY }] }
-            ]}
-            {...panResponder.panHandlers}
-          >
-            {/* Swipe indicator bar */}
-            <View style={styles.swipeIndicator} />
-            
-            {/* Close button - X in corner */}
-            <TouchableOpacity 
-              style={styles.miniAppCloseButton}
-              onPress={closeWebView}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="close" size={24} color="white" />
-            </TouchableOpacity>
-            
-            {/* Full screen WebView */}
-            <WebView
-              source={{ uri: getWebViewUrl() }}
-              style={{ flex: 1, backgroundColor: '#000' }}
-              bounces={false}
-              scrollEnabled={true}
-              allowsInlineMediaPlayback={true}
-              mediaPlaybackRequiresUserAction={false}
-              javaScriptEnabled={true}
-              domStorageEnabled={true}
-              startInLoadingState={true}
-              onShouldStartLoadWithRequest={(request) => isValidNavigationUrl(request.url)}
-            />
-          </Animated.View>
-        </View>
-      </Modal>
-    </View>
+    </Animated.View>
   );
 }
-
-const styles = StyleSheet.create(SHARED_WEBVIEW_STYLES);

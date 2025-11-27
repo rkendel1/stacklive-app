@@ -12,6 +12,7 @@ const mockAllApps: MiniApp[] = [
     iconBackgroundColor: 'bg-orange-500',
     rating: 4.8,
     reviews: '1K',
+    deploymentUrl: 'https://stacklive.app/apps/pixel-art',
     launchUrl: '#',
   },
   {
@@ -22,6 +23,7 @@ const mockAllApps: MiniApp[] = [
     iconBackgroundColor: 'bg-blue-500',
     rating: 4.5,
     reviews: '2K',
+    deploymentUrl: 'https://stacklive.app/apps/focus-timer',
     launchUrl: '#',
   },
   {
@@ -32,6 +34,7 @@ const mockAllApps: MiniApp[] = [
     iconBackgroundColor: 'bg-green-500',
     rating: 4.7,
     reviews: '3K',
+    deploymentUrl: 'https://stacklive.app/apps/music-mixer',
     launchUrl: '#',
   },
   {
@@ -42,6 +45,7 @@ const mockAllApps: MiniApp[] = [
     iconBackgroundColor: 'bg-pink-500',
     rating: 4.6,
     reviews: '1.5K',
+    deploymentUrl: 'https://stacklive.app/apps/recipe-book',
     launchUrl: '#',
   },
   {
@@ -52,6 +56,7 @@ const mockAllApps: MiniApp[] = [
     iconBackgroundColor: 'bg-indigo-500',
     rating: 4.9,
     reviews: '5K',
+    deploymentUrl: 'https://stacklive.app/apps/weather-app',
     launchUrl: '#',
   },
 ];
@@ -90,8 +95,18 @@ export const useTrendingApps = () => {
         const curationData = await curationRes.json();
 
         // Use API data if available, otherwise fallback to mock data
-        const effectiveApps = apps.length > 0 ? apps : mockAllApps;
+        let effectiveApps = apps.length > 0 ? apps : mockAllApps;
         const effectiveCuration = curationData || mockCuration;
+
+        // Derive launchUrl from deploymentUrl if needed
+        effectiveApps = effectiveApps.map((app) => {
+          if (app.deploymentUrl && (!app.launchUrl || app.launchUrl === '#')) {
+            const url = new URL(app.deploymentUrl);
+            url.searchParams.set('webview', 'true');
+            return { ...app, launchUrl: url.toString() };
+          }
+          return app;
+        });
         
         setAllApps(effectiveApps);
         setCuration(effectiveCuration);
@@ -109,9 +124,17 @@ export const useTrendingApps = () => {
       } catch (err) {
         console.error('Trending fetch error:', err);
         // Use mock data as fallback when API fails
-        setAllApps(mockAllApps);
+        const mockAppsWithUrls = mockAllApps.map((app) => {
+          if (app.deploymentUrl && app.launchUrl === '#') {
+            const url = new URL(app.deploymentUrl);
+            url.searchParams.set('webview', 'true');
+            return { ...app, launchUrl: url.toString() };
+          }
+          return app;
+        });
+        setAllApps(mockAppsWithUrls);
         setCuration(mockCuration);
-        setTrendingApps(mockAllApps.filter(app => mockCuration.trendingAppIds.includes(app.id)));
+        setTrendingApps(mockAppsWithUrls.filter(app => mockCuration.trendingAppIds.includes(app.id)));
         setError(null); // Clear error since we have fallback data
       } finally {
         setLoading(false);
