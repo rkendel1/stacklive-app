@@ -1,9 +1,10 @@
 import OnboardingCarousel from '@/components/OnboardingCarousel';
 import SignUpModal from '@/components/SignUpModal';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { signInWithApple, signInWithEmail, signInWithGoogle } from '@/src/lib/auth';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Platform, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -27,40 +28,73 @@ export default function OnboardingScreen() {
   }, [completeOnboarding]);
 
   const handleAppleSignIn = useCallback(async () => {
-    // TODO: Implement real Apple Sign-In using expo-apple-authentication
-    // For now, simulate sign-in for demo purposes
-    if (Platform.OS === 'ios') {
-      try {
-        await signIn('apple', 'User', undefined);
+    if (Platform.OS !== 'ios') {
+      Alert.alert('Not Available', 'Apple Sign-In is only available on iOS devices.');
+      return;
+    }
+    
+    try {
+      const result = await signInWithApple();
+      if (result.success && result.user) {
+        await signIn(
+          'apple',
+          result.user.displayName || undefined,
+          result.user.email || undefined,
+          result.user.id,
+          result.user.token
+        );
         setShowSignUpModal(false);
         router.replace('/(tabs)');
-      } catch (error) {
-        console.error('Apple Sign-In error:', error);
+      } else if (result.error && result.error !== 'Sign-in was cancelled') {
+        Alert.alert('Sign-In Failed', result.error);
       }
+    } catch (error) {
+      console.error('Apple Sign-In error:', error);
+      Alert.alert('Error', 'An unexpected error occurred during sign-in.');
     }
   }, [signIn, router]);
 
   const handleGoogleSignIn = useCallback(async () => {
-    // TODO: Implement real Google Sign-In
-    // For now, simulate sign-in for demo purposes
     try {
-      await signIn('google', 'User', undefined);
-      setShowSignUpModal(false);
-      router.replace('/(tabs)');
+      const result = await signInWithGoogle();
+      if (result.success && result.user) {
+        await signIn(
+          'google',
+          result.user.displayName || undefined,
+          result.user.email || undefined,
+          result.user.id,
+          result.user.token
+        );
+        setShowSignUpModal(false);
+        router.replace('/(tabs)');
+      } else if (result.error && result.error !== 'Sign-in was cancelled') {
+        Alert.alert('Sign-In Failed', result.error);
+      }
     } catch (error) {
       console.error('Google Sign-In error:', error);
+      Alert.alert('Error', 'An unexpected error occurred during sign-in.');
     }
   }, [signIn, router]);
 
   const handleEmailSignIn = useCallback(async (email: string) => {
-    // TODO: Implement real email sign-in with magic link/OTP
-    // For now, simulate sign-in for demo purposes
     try {
-      await signIn('email', undefined, email);
-      setShowSignUpModal(false);
-      router.replace('/(tabs)');
+      const result = await signInWithEmail(email);
+      if (result.success && result.user) {
+        await signIn(
+          'email',
+          result.user.displayName || undefined,
+          result.user.email || undefined,
+          result.user.id,
+          result.user.token
+        );
+        setShowSignUpModal(false);
+        router.replace('/(tabs)');
+      } else if (result.error) {
+        Alert.alert('Sign-In Failed', result.error);
+      }
     } catch (error) {
       console.error('Email Sign-In error:', error);
+      Alert.alert('Error', 'An unexpected error occurred during sign-in.');
     }
   }, [signIn, router]);
 

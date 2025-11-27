@@ -38,13 +38,19 @@ interface OnboardingState {
   displayName: string | null;
   /** User's email */
   email: string | null;
+  /** User's unique ID from authentication provider */
+  userId: string | null;
+  /** Authentication provider used (apple, google, email) */
+  authProvider: 'apple' | 'google' | 'email' | null;
+  /** Authentication token for API calls */
+  authToken: string | null;
 }
 
 interface OnboardingContextType extends OnboardingState {
   /** Mark onboarding carousel as completed */
   completeOnboarding: () => Promise<void>;
   /** Sign in with account (Apple, Google, or Email) */
-  signIn: (method: 'apple' | 'google' | 'email', displayName?: string, email?: string) => Promise<void>;
+  signIn: (method: 'apple' | 'google' | 'email', displayName?: string, email?: string, userId?: string, authToken?: string) => Promise<void>;
   /** Continue as guest (dismiss sign-up) */
   continueAsGuest: () => Promise<void>;
   /** Sign out */
@@ -75,6 +81,9 @@ const defaultState: OnboardingState = {
   lastPromptTimestamp: null,
   displayName: null,
   email: null,
+  userId: null,
+  authProvider: null,
+  authToken: null,
 };
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -139,13 +148,18 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(async (
     method: 'apple' | 'google' | 'email',
     displayName?: string,
-    email?: string
+    email?: string,
+    userId?: string,
+    authToken?: string
   ) => {
     const newState = {
       ...state,
       hasAccount: true,
       displayName: displayName || state.displayName,
       email: email || state.email,
+      userId: userId || state.userId,
+      authProvider: method,
+      authToken: authToken || state.authToken,
     };
     setState(newState);
     await persistState(newState);
@@ -167,6 +181,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       hasAccount: false,
       displayName: null,
       email: null,
+      userId: null,
+      authProvider: null,
+      authToken: null,
     };
     setState(newState);
     await persistState(newState);

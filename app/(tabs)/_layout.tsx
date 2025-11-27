@@ -3,10 +3,11 @@ import AccountBanner from '@/components/AccountBanner';
 import SignUpModal from '@/components/SignUpModal';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { signInWithApple, signInWithEmail, signInWithGoogle } from '@/src/lib/auth';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHideUI } from '../../contexts/HideUIContext';
 
@@ -39,31 +40,70 @@ export default function TabLayout() {
   }, [recordPromptShown]);
 
   const handleAppleSignIn = useCallback(async () => {
-    if (Platform.OS === 'ios') {
-      try {
-        await signIn('apple', 'User', undefined);
+    if (Platform.OS !== 'ios') {
+      Alert.alert('Not Available', 'Apple Sign-In is only available on iOS devices.');
+      return;
+    }
+    
+    try {
+      const result = await signInWithApple();
+      if (result.success && result.user) {
+        await signIn(
+          'apple',
+          result.user.displayName || undefined,
+          result.user.email || undefined,
+          result.user.id,
+          result.user.token
+        );
         setShowSignUpModal(false);
-      } catch (error) {
-        console.error('Apple Sign-In error:', error);
+      } else if (result.error && result.error !== 'Sign-in was cancelled') {
+        Alert.alert('Sign-In Failed', result.error);
       }
+    } catch (error) {
+      console.error('Apple Sign-In error:', error);
+      Alert.alert('Error', 'An unexpected error occurred during sign-in.');
     }
   }, [signIn]);
 
   const handleGoogleSignIn = useCallback(async () => {
     try {
-      await signIn('google', 'User', undefined);
-      setShowSignUpModal(false);
+      const result = await signInWithGoogle();
+      if (result.success && result.user) {
+        await signIn(
+          'google',
+          result.user.displayName || undefined,
+          result.user.email || undefined,
+          result.user.id,
+          result.user.token
+        );
+        setShowSignUpModal(false);
+      } else if (result.error && result.error !== 'Sign-in was cancelled') {
+        Alert.alert('Sign-In Failed', result.error);
+      }
     } catch (error) {
       console.error('Google Sign-In error:', error);
+      Alert.alert('Error', 'An unexpected error occurred during sign-in.');
     }
   }, [signIn]);
 
   const handleEmailSignIn = useCallback(async (email: string) => {
     try {
-      await signIn('email', undefined, email);
-      setShowSignUpModal(false);
+      const result = await signInWithEmail(email);
+      if (result.success && result.user) {
+        await signIn(
+          'email',
+          result.user.displayName || undefined,
+          result.user.email || undefined,
+          result.user.id,
+          result.user.token
+        );
+        setShowSignUpModal(false);
+      } else if (result.error) {
+        Alert.alert('Sign-In Failed', result.error);
+      }
     } catch (error) {
       console.error('Email Sign-In error:', error);
+      Alert.alert('Error', 'An unexpected error occurred during sign-in.');
     }
   }, [signIn]);
 
