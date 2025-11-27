@@ -8,7 +8,7 @@ import { MiniApp } from '@/src/lib/miniapps';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, FlatList, Linking, PanResponder, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, FlatList, PanResponder, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 import { useHideUI } from '../../../contexts/HideUIContext';
@@ -123,7 +123,10 @@ export default function AppDetailScreen() {
     if (miniApp?.launchUrl) {
       const separator = miniApp.launchUrl.includes('?') ? '&' : '?';
       const webviewUrl = `${miniApp.launchUrl}${separator}webview=true`;
-      Linking.openURL(webviewUrl);
+      router.push({
+        pathname: '/(modal)/webview',
+        params: { url: webviewUrl },
+      });
     }
   };
 
