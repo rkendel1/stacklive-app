@@ -277,13 +277,9 @@ export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) 
                 <Text style={baseStyles.compactRatingText}>({app.rating?.toFixed(1) || 'N/A'})</Text>
               </View>
             </View>
-            <TouchableOpacity
-              style={baseStyles.compactOpenButton}
-              onPress={handlePress}
-              activeOpacity={0.8}
-            >
+            <View style={baseStyles.compactOpenButton}>
               <Text style={baseStyles.compactOpenButtonText}>Open</Text>
-            </TouchableOpacity>
+            </View>
           </LinearGradient>
         </Animated.View>
       </TouchableOpacity>
