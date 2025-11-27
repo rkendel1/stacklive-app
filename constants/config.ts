@@ -301,3 +301,33 @@ export const splashConfig: SplashConfig = {
   hasImages: true,
   animationDuration: 1000,
 };
+
+/**
+ * Authentication API configuration.
+ * These endpoints will be called when creating/signing in users.
+ */
+export interface AuthConfig {
+  /** API endpoint for creating a new user account */
+  createAccountEndpoint: string;
+  /** API endpoint for signing in an existing user */
+  signInEndpoint: string;
+  /** Google OAuth client ID for web/Android */
+  googleClientId: string;
+  /** Google OAuth client ID for iOS */
+  googleClientIdIOS: string;
+}
+
+/**
+ * Authentication configuration - update these values with your actual API endpoints.
+ * The owner will provide the actual API configuration later.
+ */
+export const authConfig: AuthConfig = {
+  // TODO: Add your API endpoint for creating user accounts
+  createAccountEndpoint: `${API_BASE}/api/auth/signup`,
+  // TODO: Add your API endpoint for signing in users
+  signInEndpoint: `${API_BASE}/api/auth/signin`,
+  // TODO: Add your Google OAuth client ID
+  googleClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '',
+  // TODO: Add your Google OAuth client ID for iOS
+  googleClientIdIOS: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS || '',
+};
