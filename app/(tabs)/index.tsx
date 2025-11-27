@@ -5,9 +5,10 @@ import { pageConfigs } from '@/constants/config';
 import { getIconComponent } from '@/constants/nativeIcons';
 import { useTrendingApps as useAppsData } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Dimensions, FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const { allApps, curation, loading, error } = useAppsData();
@@ -15,6 +16,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const isDark = colorScheme === 'dark';
+  const screenWidth = Dimensions.get('window').width;
 
   const getHydratedApps = (ids: string[]): MiniApp[] => {
     if (!allApps || !ids.length) return [];
@@ -27,19 +30,159 @@ export default function HomeScreen() {
 
   const homeConfig = pageConfigs.home;
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isDark ? '#000' : '#fff',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: isDark ? '#000' : '#fff',
+    },
+    loadingText: {
+      marginTop: 8,
+      color: isDark ? '#fff' : '#000',
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 16,
+      backgroundColor: isDark ? '#000' : '#fff',
+    },
+    errorText: {
+      color: isDark ? '#f87171' : '#ef4444',
+      textAlign: 'center',
+    },
+    searchHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      backgroundColor: isDark ? '#000' : '#fff',
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? '#374151' : '#e5e7eb',
+    },
+    searchInput: {
+      flex: 1,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: isDark ? '#4b5563' : '#d1d5db',
+      borderRadius: 8,
+      backgroundColor: isDark ? '#1f2937' : '#fff',
+      color: isDark ? '#fff' : '#000',
+      marginRight: 16,
+    },
+    userIconContainer: {
+      width: 40,
+      height: 40,
+      backgroundColor: '#d1d5db',
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    scrollContent: {
+      flex: 1,
+      paddingTop: 4,
+      paddingBottom: 100,
+    },
+    sectionCard: {
+      marginHorizontal: 16,
+      marginVertical: 12,
+      backgroundColor: isDark ? '#111827' : '#fff',
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: isDark ? '#1f2937' : '#f3f4f6',
+      overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 8,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: isDark ? '#fff' : '#000',
+    },
+    seeAllText: {
+      color: '#3b82f6',
+      fontSize: 14,
+    },
+    sectionContent: {
+      padding: 16,
+    },
+    emptyText: {
+      color: isDark ? '#9ca3af' : '#6b7280',
+      textAlign: 'center',
+      paddingVertical: 16,
+    },
+    gridContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+    },
+    gridItem: {
+      width: (screenWidth - 64) / 2,
+      marginBottom: 12,
+    },
+    bottomBar: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: 16,
+      backgroundColor: isDark ? '#000' : '#fff',
+      borderTopWidth: 1,
+      borderTopColor: isDark ? '#374151' : '#e5e7eb',
+    },
+    signUpButton: {
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      borderRadius: 12,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    signUpText: {
+      color: '#fff',
+      fontWeight: '600',
+      fontSize: 14,
+      marginRight: 8,
+    },
+    searchResultsContainer: {
+      flex: 1,
+      padding: 16,
+    },
+    searchResultItem: {
+      marginBottom: 12,
+    },
+  });
+
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color={colorScheme === 'dark' ? '#fff' : '#000'} />
-        <Text className="mt-2 dark:text-white">Loading home...</Text>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={isDark ? '#fff' : '#000'} />
+        <Text style={styles.loadingText}>Loading home...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 justify-center items-center p-4">
-        <Text className="text-red-500 dark:text-red-400 text-center">{error}</Text>
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
@@ -51,104 +194,97 @@ export default function HomeScreen() {
 
   const renderSection = (title: string, apps: MiniApp[]) => {
     const isFeatured = title === 'Featured';
-    const isNewThisWeek = title === 'New This Week';
-
-    const renderItem = ({ item }: { item: MiniApp }) => (
-      <View className={isFeatured ? "w-full" : "w-1/2 p-2"}>
-        <AppCard app={item} size={isFeatured ? "large" : "small"} onPress={() => router.push(`/app-detail?id=${item.id}`)} />
-      </View>
-    );
-
-    const ItemSeparatorComponent = undefined;
-
-    const screenWidth = Dimensions.get('window').width;
 
     return (
-      <View className="mx-4 my-4 bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-100 dark:border-gray-800 overflow-hidden mb-6">
-        <View className="flex-row justify-between items-center mb-2 px-4 pt-4">
-          <Text className="text-lg font-semibold dark:text-white">{title}</Text>
+      <View style={styles.sectionCard} key={title}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{title}</Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/trending')}>
-            <Text className="text-blue-500 dark:text-blue-400">See all</Text>
+            <Text style={styles.seeAllText}>See all</Text>
           </TouchableOpacity>
         </View>
         {apps.length === 0 ? (
-          <Text className="text-gray-500 dark:text-gray-400 text-center py-4">No {title.toLowerCase()} apps available</Text>
+          <Text style={styles.emptyText}>No {title.toLowerCase()} apps available</Text>
         ) : isFeatured ? (
-          <View className="px-4 pb-4">
+          <View style={styles.sectionContent}>
             <AppCard app={apps[0]} size="large" onPress={() => router.push(`/app-detail?id=${apps[0].id}`)} />
           </View>
         ) : (
-          <FlatList
-            data={apps.slice(0, 4)}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            horizontal={false}
-            numColumns={2}
-            ItemSeparatorComponent={ItemSeparatorComponent}
-            showsHorizontalScrollIndicator={false}
-            className="p-4 pb-4"
-            contentContainerStyle={{ columnGap: 16, rowGap: 12, paddingHorizontal: 16 }}
-          />
+          <View style={styles.gridContainer}>
+            {apps.slice(0, 4).map((item) => (
+              <View key={item.id} style={styles.gridItem}>
+                <AppCard app={item} size="small" onPress={() => router.push(`/app-detail?id=${item.id}`)} />
+              </View>
+            ))}
+          </View>
         )}
       </View>
     );
   };
 
+  const UserIcon = getIconComponent('user') || (() => <Text>👤</Text>);
+  const ArrowIcon = getIconComponent('arrow-right') || (() => <Text style={{ color: '#fff' }}>→</Text>);
+
   if (searchQuery) {
-    const UserIcon = getIconComponent('user') || (() => <Text>👤</Text>);
     return (
-      <View className="flex-1 bg-white dark:bg-black">
-        <View className="flex-row items-center p-4 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-700">
+      <View style={styles.container}>
+        <View style={styles.searchHeader}>
           <TextInput
-            className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white mr-4 shadow-sm"
+            style={styles.searchInput}
             placeholder={homeConfig.placeholder}
-            placeholderTextColor="gray"
+            placeholderTextColor="#9ca3af"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
-          <View className="w-10 h-10 bg-gray-300 rounded-full justify-center items-center">
+          <View style={styles.userIconContainer}>
             <UserIcon size={20} color="#666" />
           </View>
         </View>
-        <FlatList
-          data={filteredApps}
-          renderItem={({ item }) => <AppCard app={item} size="small" onPress={() => router.push(`/app-detail?id=${item.id}`)} />}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          className="p-2"
-          ListEmptyComponent={
-            <Text className="text-gray-500 dark:text-gray-400 text-center py-4">No apps match your search</Text>
-          }
-        />
+        <ScrollView style={styles.searchResultsContainer}>
+          {filteredApps.length === 0 ? (
+            <Text style={styles.emptyText}>No apps match your search</Text>
+          ) : (
+            filteredApps.map((item) => (
+              <View key={item.id} style={styles.searchResultItem}>
+                <AppCard app={item} size="small" onPress={() => router.push(`/app-detail?id=${item.id}`)} />
+              </View>
+            ))
+          )}
+        </ScrollView>
       </View>
     );
   }
-  const UserIcon = getIconComponent('user') || (() => <Text>👤</Text>);
-  const ArrowIcon = getIconComponent('arrow-right') || (() => <Text className="text-white">→</Text>);
 
   return (
-    <View className="flex-1 bg-white dark:bg-black">
-      <View className="flex-row items-center p-4 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-700">
+    <View style={styles.container}>
+      <View style={styles.searchHeader}>
         <TextInput
-          className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white mr-4 shadow-sm"
+          style={styles.searchInput}
           placeholder={homeConfig.placeholder}
-          placeholderTextColor="gray"
+          placeholderTextColor="#9ca3af"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
-        <View className="w-10 h-10 bg-gray-300 rounded-full justify-center items-center">
+        <View style={styles.userIconContainer}>
           <UserIcon size={20} color="#666" />
         </View>
       </View>
-      <View className="flex-1 pt-1">
+      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {renderSection('Featured', getHydratedApps(curation?.featuredAppIds || []))}
         {renderSection('New This Week', getHydratedApps(curation?.newThisWeekAppIds || []))}
-      </View>
-      <View className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-700">
-        <TouchableOpacity className="bg-gradient-to-r from-blue-500 to-indigo-600 px-8 py-4 rounded-lg flex-row justify-center items-center" onPress={() => setShowModal(true)}>
-          <Text className="text-white font-semibold text-sm mr-2">Complete your account to save</Text>
-          <Text className="text-white font-medium text-sm mr-1">Sign up +</Text>
-          <ArrowIcon size={16} color="white" />
+      </ScrollView>
+      <View style={styles.bottomBar}>
+        <TouchableOpacity onPress={() => setShowModal(true)}>
+          <LinearGradient
+            colors={['#3b82f6', '#4f46e5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.signUpButton}
+          >
+            <Text style={styles.signUpText}>Complete your account to save</Text>
+            <Text style={styles.signUpText}>Sign up +</Text>
+            <ArrowIcon size={16} color="white" />
+          </LinearGradient>
         </TouchableOpacity>
       </View>
       <SignUpModal

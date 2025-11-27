@@ -5,39 +5,126 @@ import { useTrendingApps as useAppsData } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+
 export default function TrendingScreen() {
   const { trendingApps, loading, error } = useAppsData();
   const colorScheme = useColorScheme();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const isDark = colorScheme === 'dark';
 
   const filteredApps = trendingApps.filter((app: MiniApp) => 
     app.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     app.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isDark ? '#000' : '#fff',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: isDark ? '#000' : '#fff',
+    },
+    loadingText: {
+      marginTop: 8,
+      color: isDark ? '#fff' : '#000',
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 16,
+      backgroundColor: isDark ? '#000' : '#fff',
+    },
+    errorText: {
+      color: isDark ? '#f87171' : '#ef4444',
+      textAlign: 'center',
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 16,
+      backgroundColor: isDark ? '#000' : '#fff',
+    },
+    emptyText: {
+      color: isDark ? '#9ca3af' : '#6b7280',
+      textAlign: 'center',
+    },
+    searchHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginHorizontal: 16,
+      marginTop: 16,
+    },
+    searchIconContainer: {
+      width: 40,
+      height: 40,
+      backgroundColor: isDark ? '#374151' : '#d1d5db',
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 16,
+    },
+    searchInput: {
+      flex: 1,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: isDark ? '#4b5563' : '#d1d5db',
+      borderRadius: 8,
+      backgroundColor: isDark ? '#1f2937' : '#fff',
+      color: isDark ? '#fff' : '#000',
+    },
+    listHeader: {
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      backgroundColor: isDark ? '#000' : '#fff',
+    },
+    headerTitle: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: isDark ? '#fff' : '#000',
+      marginBottom: 4,
+    },
+    headerSubtitle: {
+      fontSize: 14,
+      color: isDark ? '#9ca3af' : '#6b7280',
+    },
+    listContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 20,
+    },
+    appItem: {
+      marginBottom: 12,
+    },
+  });
+
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color={colorScheme === 'dark' ? '#fff' : '#000'} />
-        <Text className="mt-2 dark:text-white">Loading trending apps...</Text>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={isDark ? '#fff' : '#000'} />
+        <Text style={styles.loadingText}>Loading trending apps...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 justify-center items-center p-4">
-        <Text className="text-red-500 dark:text-red-400 text-center">{error}</Text>
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
 
   if (filteredApps.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center p-4">
-        <Text className="text-gray-500 dark:text-gray-400 text-center">
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>
           {searchQuery ? 'No trending apps match your search' : 'No trending apps available'}
         </Text>
       </View>
@@ -45,14 +132,14 @@ export default function TrendingScreen() {
   }
 
   const ListHeaderComponent = () => (
-    <View className="px-4 py-4 bg-white dark:bg-black">
-      <Text className="text-xl font-bold dark:text-white mb-1">Trending Apps</Text>
-      <Text className="text-gray-500 dark:text-gray-400 text-sm">{filteredApps.length} apps</Text>
+    <View style={styles.listHeader}>
+      <Text style={styles.headerTitle}>Trending Apps</Text>
+      <Text style={styles.headerSubtitle}>{filteredApps.length} apps</Text>
     </View>
   );
 
   const renderAppItem = ({ item }: { item: MiniApp }) => (
-    <View className="mx-4 my-2">
+    <View style={styles.appItem}>
       <AppCard app={item} size="small" onPress={() => router.push(`/app-detail?id=${item.id}`)} />
     </View>
   );
@@ -60,15 +147,15 @@ export default function TrendingScreen() {
   const SearchIcon = getIconComponent('search') || (() => <Text>🔍</Text>);
 
   return (
-    <View className="flex-1 bg-white dark:bg-black">
-      <View className="flex-row items-center mx-4 mt-4">
-        <View className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full justify-center items-center mr-4">
+    <View style={styles.container}>
+      <View style={styles.searchHeader}>
+        <View style={styles.searchIconContainer}>
           <SearchIcon size={20} color="#666" />
         </View>
         <TextInput
-          className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white shadow-sm"
+          style={styles.searchInput}
           placeholder="Search trending..."
-          placeholderTextColor="gray"
+          placeholderTextColor="#9ca3af"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -79,8 +166,7 @@ export default function TrendingScreen() {
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={ListHeaderComponent}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        className="p-2"
+        contentContainerStyle={styles.listContent}
       />
     </View>
   );
