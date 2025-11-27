@@ -17,10 +17,9 @@ export const NATIVE_ICONS: { [key: string]: React.ComponentType<IconProps> } = {
   Cloud,
   User,
   Search,
+  // Lowercase aliases for API compatibility
   user: User,
   search: Search,
-  'arrow-right': Zap, // Fallback
-  // Add more mappings as needed based on API icons
 };
 
 // Fallback function to get icon component

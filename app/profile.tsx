@@ -50,7 +50,15 @@ interface AppUsage {
   lastUsed: number;
 }
 
-const APP_VERSION = Constants.expoConfig?.version || '2.4.1';
+const APP_VERSION = Constants.expoConfig?.version || '1.0.0';
+
+// Default stats - will be replaced with real data from storage
+const DEFAULT_STATS: UserStats = {
+  activeStreaks: 0,
+  appsUsedThisWeek: 0,
+  confettiExploded: 0,
+  daysInStacklive: 1,
+};
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -64,12 +72,7 @@ export default function ProfileScreen() {
     ? displayName.toLowerCase().replace(/\s+/g, '') 
     : email?.split('@')[0] || 'guest';
 
-  const [stats, setStats] = useState<UserStats>({
-    activeStreaks: 27,
-    appsUsedThisWeek: 124,
-    confettiExploded: 2400000,
-    daysInStacklive: 312,
-  });
+  const [stats, setStats] = useState<UserStats>(DEFAULT_STATS);
 
   const [privacySettings, setPrivacySettings] = useState<PrivacySettings>({
     shareContextBetweenApps: true,
