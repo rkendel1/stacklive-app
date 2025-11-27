@@ -1,7 +1,7 @@
 import SignUpModal from '@/components/SignUpModal';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useRouter } from 'expo-router';
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
 /**
@@ -18,10 +18,14 @@ export default function ReturningPromptScreen() {
     promptCount,
   } = useOnboarding();
 
-  // Record that we showed a prompt
+  // Record that we showed a prompt - only once on mount
+  const hasRecordedPrompt = useRef(false);
   React.useEffect(() => {
-    recordPromptShown();
-  }, [recordPromptShown]);
+    if (!hasRecordedPrompt.current) {
+      hasRecordedPrompt.current = true;
+      recordPromptShown();
+    }
+  }, []);
 
   // Determine if we should show full-screen interstitial (after 2+ dismissals)
   const useFullScreenModal = promptCount >= 2;
