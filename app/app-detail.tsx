@@ -7,8 +7,8 @@ import { useTrendingApps as useAppsData } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Dimensions, FlatList, Modal, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, FlatList, Modal, PanResponder, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 import { useHideUI } from '../contexts/HideUIContext';
@@ -55,8 +55,50 @@ export default function AppDetailScreen() {
   const colors = Colors[colorScheme || 'light'];
   const backgroundColor = colors.background;
   const toggleFavorite = () => setIsFavorite(!isFavorite);
+  
+  // Animation for swipe-to-dismiss
+  const translateY = useRef(new Animated.Value(0)).current;
+  const SWIPE_THRESHOLD = height * 0.25; // 25% of screen height to dismiss
+  
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to vertical swipes down from top area
+        return gestureState.dy > 10 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // Only allow downward movement
+        if (gestureState.dy > 0) {
+          translateY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > SWIPE_THRESHOLD) {
+          // Dismiss the modal
+          Animated.timing(translateY, {
+            toValue: height,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => {
+            closeWebView();
+            translateY.setValue(0);
+          });
+        } else {
+          // Snap back
+          Animated.spring(translateY, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 100,
+            friction: 10,
+          }).start();
+        }
+      },
+    })
+  ).current;
+  
   const openWebView = () => {
-    const webviewUrl = miniApp?.launchUrl ? `${miniApp.launchUrl}=webview` : uri;
+    translateY.setValue(0);
     setWebViewVisible(true);
   };
   const closeWebView = () => setWebViewVisible(false);
@@ -326,6 +368,39 @@ export default function AppDetailScreen() {
     webViewClose: {
       padding: 8,
     },
+    // Full screen mini app modal styles
+    miniAppModalContainer: {
+      flex: 1,
+      backgroundColor: '#000',
+    },
+    miniAppWebViewContainer: {
+      flex: 1,
+      width: width,
+      height: height,
+    },
+    miniAppCloseButton: {
+      position: 'absolute',
+      top: Platform.OS === 'ios' ? 50 : 20,
+      right: 16,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000,
+    },
+    swipeIndicator: {
+      position: 'absolute',
+      top: Platform.OS === 'ios' ? 10 : 6,
+      left: '50%',
+      marginLeft: -20,
+      width: 40,
+      height: 5,
+      borderRadius: 2.5,
+      backgroundColor: 'rgba(255, 255, 255, 0.5)',
+      zIndex: 1000,
+    },
   });
 
   if (!app) {
@@ -487,27 +562,51 @@ export default function AppDetailScreen() {
         </View>
       </SafeAreaView>
 
-      {/* WebView Modal */}
+      {/* Mini App WebView Modal - Full Screen Overlay */}
       <Modal
         visible={webViewVisible}
         animationType="slide"
-        presentationStyle="fullScreen"
+        presentationStyle="overFullScreen"
+        transparent={false}
+        statusBarTranslucent={true}
         onRequestClose={closeWebView}
       >
-        <SafeAreaView style={styles.webViewModal} edges={['top', 'bottom']}>
-          <WebView
-            source={{ uri: miniApp?.launchUrl ? `${miniApp.launchUrl}=webview` : uri }}
-            style={{ flex: 1 }}
-            bounces={Platform.OS === 'ios'}
-            scrollEnabled={true}
-            onShouldStartLoadWithRequest={(request) => {
-              if (request.url !== (miniApp?.launchUrl ? `${miniApp.launchUrl}=webview` : uri)) {
-                return false;
-              }
-              return true;
-            }}
-          />
-        </SafeAreaView>
+        <View style={styles.miniAppModalContainer}>
+          <StatusBar hidden={true} />
+          <Animated.View 
+            style={[
+              styles.miniAppWebViewContainer, 
+              { transform: [{ translateY }] }
+            ]}
+            {...panResponder.panHandlers}
+          >
+            {/* Swipe indicator bar */}
+            <View style={styles.swipeIndicator} />
+            
+            {/* Close button - X in corner */}
+            <TouchableOpacity 
+              style={styles.miniAppCloseButton}
+              onPress={closeWebView}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="close" size={24} color="white" />
+            </TouchableOpacity>
+            
+            {/* Full screen WebView */}
+            <WebView
+              source={{ uri: miniApp?.launchUrl ? `${miniApp.launchUrl}?mode=webview` : uri }}
+              style={{ flex: 1, backgroundColor: '#000' }}
+              bounces={false}
+              scrollEnabled={true}
+              allowsInlineMediaPlayback={true}
+              mediaPlaybackRequiresUserAction={false}
+              javaScriptEnabled={true}
+              domStorageEnabled={true}
+              startInLoadingState={true}
+              onShouldStartLoadWithRequest={() => true}
+            />
+          </Animated.View>
+        </View>
       </Modal>
     </View>
   );
