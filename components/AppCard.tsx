@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { MiniApp } from '@/src/lib/miniapps';
-import { useRef } from 'react';
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useMemo, useRef } from 'react';
+import { Animated, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useColorScheme } from './useColorScheme';
 
 interface AppCardProps {
@@ -21,6 +21,62 @@ const getEmojiForIcon = (icon: string): string => {
   }
 };
 
+const colorMap: Record<string, Record<number, string>> = {
+  orange: { 400: '#fed7aa', 500: '#f97316', 600: '#ea580c' },
+  blue: { 400: '#dbeafe', 500: '#3b82f6', 600: '#2563eb' },
+  green: { 400: '#d1fae5', 500: '#10b981', 600: '#059669' },
+  pink: { 400: '#fce7f3', 500: '#ec4899', 600: '#db2777' },
+  purple: { 400: '#f3e8ff', 500: '#a855f7', 600: '#9333ea' },
+  indigo: { 400: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5' },
+};
+
+// Base styles that don't depend on props
+const baseStyles = StyleSheet.create({
+  touchable: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  contentContainer: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  stars: {
+    color: '#fbbf24',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  ratingText: {
+    color: 'rgba(255,255,255,0.75)',
+    marginLeft: 4,
+    fontSize: 12,
+  },
+  openButton: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginTop: 8,
+  },
+  openButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  description: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 8,
+    lineHeight: 20,
+  },
+});
+
 export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) {
   const colorScheme = useColorScheme();
   const scaleValue = useRef(new Animated.Value(1)).current;
@@ -34,18 +90,16 @@ export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) 
   const match = cardBg.match(/(\w+)-(\d+)/);
   const color = match ? match[1] : defaultColor;
 
-  const colorMap: Record<string, Record<number, string>> = {
-    orange: { 400: '#fed7aa', 500: '#f97316', 600: '#ea580c' },
-    blue: { 400: '#dbeafe', 500: '#3b82f6', 600: '#2563eb' },
-    green: { 400: '#d1fae5', 500: '#10b981', 600: '#059669' },
-    pink: { 400: '#fce7f3', 500: '#ec4899', 600: '#db2777' },
-    purple: { 400: '#f3e8ff', 500: '#a855f7', 600: '#9333ea' },
-    indigo: { 400: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5' },
-  };
-
   const gradientColors: readonly string[] = isLarge 
     ? [colorMap[color]?.[400] || '#fed7aa', colorMap[color]?.[600] || '#ea580c']
     : [colorMap[color]?.[500] || '#f97316', colorMap[color]?.[600] || '#ea580c'];
+
+  // Default handler if onPress is not provided
+  const handlePress = onPress || (() => {
+    if (app.launchUrl) {
+      Linking.openURL(app.launchUrl);
+    }
+  });
 
   const handlePressIn = () => {
     Animated.spring(scaleValue, {
@@ -61,15 +115,12 @@ export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) 
     }).start();
   };
 
-  const styles = StyleSheet.create({
-    touchable: {
-      width: '100%',
-      marginBottom: 16,
-    },
+  // Memoize dynamic styles based on props
+  const dynamicStyles = useMemo(() => ({
     cardContainer: {
-      width: '100%',
+      width: '100%' as const,
       borderRadius: isLarge ? 24 : 16,
-      overflow: 'hidden',
+      overflow: 'hidden' as const,
       backgroundColor: isDark ? '#1f2937' : '#ffffff',
       borderWidth: isLarge ? 0 : 1,
       borderColor: isDark ? '#374151' : '#e5e7eb',
@@ -80,103 +131,64 @@ export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) 
       elevation: isLarge ? 8 : 4,
     },
     gradient: {
-      width: '100%',
+      width: '100%' as const,
       padding: isLarge ? 24 : 16,
       borderRadius: isLarge ? 24 : 16,
-      alignItems: 'center',
+      alignItems: 'center' as const,
       minHeight: isLarge ? 280 : 180,
-      justifyContent: 'center',
+      justifyContent: 'center' as const,
     },
     iconContainer: {
       width: isLarge ? 80 : 56,
       height: isLarge ? 80 : 56,
       borderRadius: isLarge ? 40 : 28,
       backgroundColor: 'rgba(255,255,255,0.25)',
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
       marginBottom: isLarge ? 16 : 12,
     },
     iconEmoji: {
       fontSize: isLarge ? 36 : 28,
     },
-    contentContainer: {
-      alignItems: 'center',
-      width: '100%',
-    },
     appName: {
-      fontWeight: '700',
+      fontWeight: '700' as const,
       fontSize: isLarge ? 22 : 16,
       color: '#ffffff',
-      textAlign: 'center',
+      textAlign: 'center' as const,
       marginBottom: 4,
     },
-    description: {
-      color: 'rgba(255,255,255,0.85)',
-      fontSize: 14,
-      textAlign: 'center',
-      marginBottom: 8,
-      paddingHorizontal: 8,
-      lineHeight: 20,
-    },
-    ratingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 8,
-    },
-    stars: {
-      color: '#fbbf24',
-      fontWeight: 'bold',
-      fontSize: 14,
-    },
-    ratingText: {
-      color: 'rgba(255,255,255,0.75)',
-      marginLeft: 4,
-      fontSize: 12,
-    },
-    openButton: {
-      backgroundColor: 'rgba(255,255,255,0.25)',
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      borderRadius: 20,
-      marginTop: 8,
-    },
-    openButtonText: {
-      color: '#ffffff',
-      fontWeight: '600',
-      fontSize: 14,
-    },
-  });
+  }), [isLarge, isDark]);
 
   const cardContent = (
-    <Animated.View style={[styles.cardContainer, { transform: [{ scale: scaleValue }] }]}>
+    <Animated.View style={[dynamicStyles.cardContainer, { transform: [{ scale: scaleValue }] }]}>
       <LinearGradient
         colors={gradientColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.gradient}
+        style={dynamicStyles.gradient}
       >
-        <View style={styles.iconContainer}>
-          <Text style={styles.iconEmoji}>{getEmojiForIcon(app.icon)}</Text>
+        <View style={dynamicStyles.iconContainer}>
+          <Text style={dynamicStyles.iconEmoji}>{getEmojiForIcon(app.icon)}</Text>
         </View>
-        <View style={styles.contentContainer}>
-          <Text style={styles.appName}>{app.name}</Text>
+        <View style={baseStyles.contentContainer}>
+          <Text style={dynamicStyles.appName}>{app.name}</Text>
           {isLarge && (
-            <Text style={styles.description} numberOfLines={3} ellipsizeMode="tail">
+            <Text style={baseStyles.description} numberOfLines={3} ellipsizeMode="tail">
               {app.description}
             </Text>
           )}
-          <View style={styles.ratingRow}>
-            <Text style={styles.stars}>
+          <View style={baseStyles.ratingRow}>
+            <Text style={baseStyles.stars}>
               {'★'.repeat(Math.floor(app.rating || 0))}{'☆'.repeat(5 - Math.floor(app.rating || 0))}
             </Text>
-            <Text style={styles.ratingText}>({app.rating?.toFixed(1) || 'N/A'})</Text>
+            <Text style={baseStyles.ratingText}>({app.rating?.toFixed(1) || 'N/A'})</Text>
           </View>
           <TouchableOpacity
-            style={styles.openButton}
-            onPress={onPress}
+            style={baseStyles.openButton}
+            onPress={handlePress}
             activeOpacity={0.8}
           >
-            <Text style={styles.openButtonText}>Open</Text>
+            <Text style={baseStyles.openButtonText}>Open</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -185,8 +197,8 @@ export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) 
 
   return (
     <TouchableOpacity 
-      style={styles.touchable}
-      onPress={onPress}
+      style={baseStyles.touchable}
+      onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       activeOpacity={1}

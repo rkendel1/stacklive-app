@@ -89,16 +89,19 @@ export const useTrendingApps = () => {
         const apps: MiniApp[] = await appsRes.json();
         const curationData = await curationRes.json();
 
-        // Use API data if available
-        setAllApps(apps.length > 0 ? apps : mockAllApps);
-        setCuration(curationData || mockCuration);
+        // Use API data if available, otherwise fallback to mock data
+        const effectiveApps = apps.length > 0 ? apps : mockAllApps;
+        const effectiveCuration = curationData || mockCuration;
+        
+        setAllApps(effectiveApps);
+        setCuration(effectiveCuration);
 
-        const allAppsMap: { [key: string]: MiniApp } = apps.reduce((map, app) => {
+        const allAppsMap: { [key: string]: MiniApp } = effectiveApps.reduce((map, app) => {
           map[app.id] = app;
           return map;
         }, {} as { [key: string]: MiniApp });
 
-        const hydratedTrending = curationData.trendingAppIds?.map((id: string) => allAppsMap[id]).filter(Boolean) || [];
+        const hydratedTrending = effectiveCuration.trendingAppIds?.map((id: string) => allAppsMap[id]).filter(Boolean) || [];
 
         setTrendingApps(hydratedTrending.length > 0 ? hydratedTrending : mockAllApps.filter(app => 
           mockCuration.trendingAppIds.includes(app.id)
