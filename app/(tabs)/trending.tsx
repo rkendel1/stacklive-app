@@ -5,7 +5,7 @@ import { useTrendingApps as useAppsData } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function TrendingScreen() {
   const { trendingApps, loading, error } = useAppsData();
@@ -62,14 +62,14 @@ export default function TrendingScreen() {
       marginHorizontal: 16,
       marginTop: 16,
     },
-    searchIconContainer: {
+    userIconContainer: {
       width: 40,
       height: 40,
       backgroundColor: isDark ? '#374151' : '#d1d5db',
       borderRadius: 20,
       justifyContent: 'center',
       alignItems: 'center',
-      marginRight: 16,
+      marginRight: 12,
     },
     searchInput: {
       flex: 1,
@@ -144,14 +144,14 @@ export default function TrendingScreen() {
     </View>
   );
 
-  const SearchIcon = getIconComponent('search') || (() => <Text>🔍</Text>);
+  const UserIcon = getIconComponent('user') || (() => <Text>👤</Text>);
 
   return (
     <View style={styles.container}>
       <View style={styles.searchHeader}>
-        <View style={styles.searchIconContainer}>
-          <SearchIcon size={20} color="#666" />
-        </View>
+        <TouchableOpacity style={styles.userIconContainer} onPress={() => router.push('/profile')}>
+          <UserIcon size={20} color="#666" />
+        </TouchableOpacity>
         <TextInput
           style={styles.searchInput}
           placeholder="Search trending..."

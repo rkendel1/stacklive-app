@@ -1,4 +1,4 @@
-import { AlarmClock, BookOpen, Box, Clock, Cloud, Music, Palette, Zap } from 'lucide-react-native';
+import { AlarmClock, BookOpen, Box, Clock, Cloud, Music, Palette, Search, User, Zap } from 'lucide-react-native';
 import React from 'react';
 
 export type IconProps = {
@@ -15,7 +15,11 @@ export const NATIVE_ICONS: { [key: string]: React.ComponentType<IconProps> } = {
   Music,
   BookOpen,
   Cloud,
-  // Add more mappings as needed based on API icons
+  User,
+  Search,
+  // Lowercase aliases for API compatibility
+  user: User,
+  search: Search,
 };
 
 // Fallback function to get icon component
