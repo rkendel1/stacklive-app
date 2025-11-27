@@ -236,9 +236,9 @@ export default function HomeScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
-          <View style={styles.userIconContainer}>
+          <TouchableOpacity style={styles.userIconContainer} onPress={() => router.push('/profile')}>
             <UserIcon size={20} color="#666" />
-          </View>
+          </TouchableOpacity>
         </View>
         <ScrollView style={styles.searchResultsContainer}>
           {filteredApps.length === 0 ? (
@@ -265,9 +265,9 @@ export default function HomeScreen() {
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
-        <View style={styles.userIconContainer}>
+        <TouchableOpacity style={styles.userIconContainer} onPress={() => router.push('/profile')}>
           <UserIcon size={20} color="#666" />
-        </View>
+        </TouchableOpacity>
       </View>
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {renderSection('Featured', getHydratedApps(curation?.featuredAppIds || []))}
