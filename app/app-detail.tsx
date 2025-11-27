@@ -57,8 +57,46 @@ export default function AppDetailScreen() {
   const toggleFavorite = () => setIsFavorite(!isFavorite);
   
   // Animation for swipe-to-dismiss
+  const DISMISS_THRESHOLD_RATIO = 0.25; // Swipe 25% of screen height to dismiss
   const translateY = useRef(new Animated.Value(0)).current;
-  const SWIPE_THRESHOLD = height * 0.25; // 25% of screen height to dismiss
+  const SWIPE_THRESHOLD = height * DISMISS_THRESHOLD_RATIO;
+  
+  // Build the webview URL with proper query parameter handling
+  const getWebViewUrl = (): string => {
+    if (miniApp?.launchUrl) {
+      try {
+        const url = new URL(miniApp.launchUrl);
+        url.searchParams.set('mode', 'webview');
+        return url.toString();
+      } catch {
+        // If URL parsing fails, fallback to simple append
+        const separator = miniApp.launchUrl.includes('?') ? '&' : '?';
+        return `${miniApp.launchUrl}${separator}mode=webview`;
+      }
+    }
+    return uri;
+  };
+  
+  // Validate if URL is safe to navigate
+  const isValidNavigationUrl = (url: string): boolean => {
+    try {
+      const parsedUrl = new URL(url);
+      // Allow http/https protocols
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        return false;
+      }
+      // If we have a launchUrl, only allow navigation within the same origin
+      if (miniApp?.launchUrl) {
+        const launchOrigin = new URL(miniApp.launchUrl).origin;
+        if (parsedUrl.origin !== launchOrigin) {
+          return false;
+        }
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  };
   
   const panResponder = useRef(
     PanResponder.create({
@@ -394,6 +432,7 @@ export default function AppDetailScreen() {
       position: 'absolute',
       top: Platform.OS === 'ios' ? 10 : 6,
       left: '50%',
+      // Center by offsetting half the width (40/2 = 20)
       marginLeft: -20,
       width: 40,
       height: 5,
@@ -594,7 +633,7 @@ export default function AppDetailScreen() {
             
             {/* Full screen WebView */}
             <WebView
-              source={{ uri: miniApp?.launchUrl ? `${miniApp.launchUrl}?mode=webview` : uri }}
+              source={{ uri: getWebViewUrl() }}
               style={{ flex: 1, backgroundColor: '#000' }}
               bounces={false}
               scrollEnabled={true}
@@ -603,7 +642,7 @@ export default function AppDetailScreen() {
               javaScriptEnabled={true}
               domStorageEnabled={true}
               startInLoadingState={true}
-              onShouldStartLoadWithRequest={() => true}
+              onShouldStartLoadWithRequest={(request) => isValidNavigationUrl(request.url)}
             />
           </Animated.View>
         </View>
