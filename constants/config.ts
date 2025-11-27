@@ -195,6 +195,7 @@ export function getWebViewAppDetailUri(id: string, theme?: 'light' | 'dark'): st
   if (theme) {
     url.searchParams.set('theme', theme);
   }
+  url.searchParams.set('webview', 'true');
   return url.toString();
 }
 

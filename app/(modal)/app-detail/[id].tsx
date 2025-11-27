@@ -1,7 +1,7 @@
 import AppScreenshotsCarousel from '@/components/AppScreenshotsCarousel';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { APP_DATA, APP_DETAIL_CONFIG, AppData, SHARED_WEBVIEW_STYLES, WEBVIEW_COMMON_PROPS, getWebViewAppDetailUri } from '@/constants/config';
+import { API_BASE, APP_DATA, APP_DETAIL_CONFIG, AppData, SHARED_WEBVIEW_STYLES, WEBVIEW_COMMON_PROPS, getWebViewAppDetailUri } from '@/constants/config';
 import { getIconComponent } from '@/constants/nativeIcons';
 import { useTrendingApps as useAppsData } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, FlatList, Linking, PanResponder, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
-import { useHideUI } from '../contexts/HideUIContext';
+import { useHideUI } from '../../../contexts/HideUIContext';
 
 export default function AppDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -22,6 +22,7 @@ export default function AppDetailScreen() {
   const insets = useSafeAreaInsets();
   const { width, height } = Dimensions.get('window');
   const [isFavorite, setIsFavorite] = useState(false);
+  const [detailedMiniApp, setDetailedMiniApp] = useState<MiniApp | null>(null);
 
   // Swipe back animation
   const DISMISS_THRESHOLD_RATIO = 0.25;
@@ -72,6 +73,33 @@ export default function AppDetailScreen() {
     };
   }, [setHideUI, setHideSearchBar]);
 
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchDetailedApp = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/miniapps/${id}`);
+        if (response.ok) {
+          const appData: MiniApp = await response.json();
+          // Derive launchUrl if missing, as in hook
+          if (appData.deploymentUrl && (!appData.launchUrl || appData.launchUrl === '#')) {
+            const url = new URL(appData.deploymentUrl);
+            url.searchParams.set('webview', 'true');
+            appData.launchUrl = url.toString();
+          }
+          setDetailedMiniApp(appData);
+        } else {
+          setDetailedMiniApp(null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch detailed app:', error);
+        setDetailedMiniApp(null);
+      }
+    };
+
+    fetchDetailedApp();
+  }, [id]);
+
   if (!id) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -81,7 +109,7 @@ export default function AppDetailScreen() {
   }
 
   const appData = APP_DATA[id as string];
-  const app = allApps.find((a: MiniApp) => a.id === id) || appData;
+  const app = detailedMiniApp || allApps.find((a: MiniApp) => a.id === id) || appData;
 
   const isMiniApp = (obj: MiniApp | AppData | undefined): obj is MiniApp => Boolean(obj && 'category' in obj);
   const miniApp = isMiniApp(app) ? app : undefined;
@@ -93,7 +121,9 @@ export default function AppDetailScreen() {
 
   const launchApp = () => {
     if (miniApp?.launchUrl) {
-      Linking.openURL(miniApp.launchUrl);
+      const separator = miniApp.launchUrl.includes('?') ? '&' : '?';
+      const webviewUrl = `${miniApp.launchUrl}${separator}webview=true`;
+      Linking.openURL(webviewUrl);
     }
   };
 

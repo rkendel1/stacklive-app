@@ -140,7 +140,7 @@ export default function TrendingScreen() {
 
   const renderAppItem = ({ item }: { item: MiniApp }) => (
     <View style={styles.appItem}>
-      <AppCard app={item} size="compact" onPress={() => router.push(`/app-detail?id=${item.id}`)} />
+      <AppCard app={item} size="compact" onPress={() => router.push(`/app-detail/${item.id}`)} />
     </View>
   );
 

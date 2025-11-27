@@ -861,7 +861,7 @@ export default function ProfileScreen() {
                 <TouchableOpacity 
                   key={app.id} 
                   style={styles.favoriteAppItem}
-                  onPress={() => router.push(`/app-detail?id=${app.id}`)}
+                  onPress={() => router.push(`/(modal)/app-detail/${app.id}`)}
                 >
                   <View style={styles.favoriteAppIcon}>
                     <ThemedText style={styles.favoriteAppEmoji}>

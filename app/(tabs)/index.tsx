@@ -306,7 +306,7 @@ export default function HomeScreen() {
           contentContainerStyle={styles.carouselContainer}
           renderItem={({ item }) => (
             <View style={styles.carouselItem}>
-              <AppCard app={item} size="large" onPress={() => router.push(`/app-detail?id=${item.id}`)} />
+              <AppCard app={item} size="large" onPress={() => router.push(`/app-detail/${item.id}`)} />
             </View>
           )}
           keyExtractor={(item) => item.id}
@@ -354,7 +354,7 @@ export default function HomeScreen() {
         </View>
         {apps.map((item) => (
           <View key={item.id} style={styles.compactAppItem}>
-            <AppCard app={item} size="compact" onPress={() => router.push(`/app-detail?id=${item.id}`)} />
+            <AppCard app={item} size="compact" onPress={() => router.push(`/app-detail/${item.id}`)} />
           </View>
         ))}
       </View>
@@ -385,7 +385,7 @@ export default function HomeScreen() {
           ) : (
             filteredApps.map((item) => (
               <View key={item.id} style={styles.searchResultItem}>
-                <AppCard app={item} size="compact" onPress={() => router.push(`/app-detail?id=${item.id}`)} />
+                <AppCard app={item} size="compact" onPress={() => router.push(`/app-detail/${item.id}`)} />
               </View>
             ))
           )}
