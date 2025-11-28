@@ -21,8 +21,10 @@ const colorMap: Record<string, Record<number, string>> = {
   indigo: { 400: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5' },
 };
 
+// Default icon name constant
+const DEFAULT_ICON = 'Box';
+
 const getGradientColors = (iconBgColor?: string): readonly [string, string] => {
-  const palette = ['orange', 'blue', 'green', 'purple', 'pink', 'indigo'];
   const cardBg = iconBgColor?.replace('bg-', '') || 'blue';
   const match = cardBg.match(/(\w+)-(\d+)/);
   const color = match ? match[1] : 'blue';
@@ -116,7 +118,7 @@ export default function AppDetailScreen() {
   const isMiniApp = (obj: MiniApp | AppData | undefined): obj is MiniApp => Boolean(obj && 'category' in obj);
   const miniApp = isMiniApp(app) ? app : undefined;
 
-  const IconComponent = getIconComponent(app?.icon || 'Box');
+  const IconComponent = getIconComponent(app?.icon || DEFAULT_ICON);
   const gradientColors = getGradientColors(miniApp?.iconBackgroundColor);
 
   const toggleFavorite = () => setIsFavorite(!isFavorite);
@@ -278,7 +280,7 @@ export default function AppDetailScreen() {
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Screenshots</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.screenshotsScroll}>
               {app.screenshots.map((screenshot: string, index: number) => (
-                <Image key={index} source={{ uri: screenshot }} style={styles.screenshot} resizeMode="cover" />
+                <Image key={`screenshot-${index}-${screenshot.slice(-20)}`} source={{ uri: screenshot }} style={styles.screenshot} resizeMode="cover" />
               ))}
             </ScrollView>
           </View>
@@ -309,7 +311,7 @@ export default function AppDetailScreen() {
       </ScrollView>
 
       {/* Launch App Button - Anchored to Bottom */}
-      <View style={[styles.launchButtonContainer, { paddingBottom: insets.bottom + 16, backgroundColor }]}>
+      <View style={[styles.launchButtonContainer, { paddingBottom: insets.bottom + 16, backgroundColor, borderTopColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
         <TouchableOpacity style={styles.launchButton} activeOpacity={0.8} onPress={launchApp}>
           <Ionicons name="rocket" size={22} color="white" />
           <Text style={styles.launchButtonText}>Launch App</Text>
