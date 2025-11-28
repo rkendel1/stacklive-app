@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -20,7 +20,6 @@ export default function WebViewScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { height } = Dimensions.get('window');
-  const [isLoading, setIsLoading] = useState(true);
 
   // Swipe down to dismiss animation
   const translateY = useRef(new Animated.Value(0)).current;
@@ -122,8 +121,6 @@ export default function WebViewScreen() {
               <ActivityIndicator size="large" color="#007AFF" />
             </View>
           )}
-          onLoadStart={() => setIsLoading(true)}
-          onLoadEnd={() => setIsLoading(false)}
           scalesPageToFit={true}
           javaScriptEnabled={true}
           domStorageEnabled={true}
