@@ -3,7 +3,7 @@
  * This allows the native app to connect to either a local development server
  * or a live production server without code changes.
  */
-const DEV_HOST = '192.168.1.204';
+const DEV_HOST = 'localhost';
 const DEV_PORT = 32100;
 
 // The `EXPO_PUBLIC_` prefix is required by Expo to expose the variable to your app's code.
@@ -312,6 +312,12 @@ export interface AuthConfig {
   createAccountEndpoint: string;
   /** API endpoint for signing in an existing user */
   signInEndpoint: string;
+  /** API endpoint for native email/password signup */
+  nativeSignupEndpoint: string;
+  /** API endpoint for native email/password login */
+  nativeLoginEndpoint: string;
+  /** API endpoint for Apple native sign-in */
+  appleNativeSigninEndpoint: string;
   /** Google OAuth client ID for web/Android */
   googleClientId: string;
   /** Google OAuth client ID for iOS */
@@ -327,6 +333,9 @@ export const authConfig: AuthConfig = {
   createAccountEndpoint: `${API_BASE}/api/auth/signup`,
   // TODO: Add your API endpoint for signing in users
   signInEndpoint: `${API_BASE}/api/auth/signin`,
+  nativeSignupEndpoint: `${API_BASE}/api/auth/native-signup`,
+  nativeLoginEndpoint: `${API_BASE}/api/auth/native-login`,
+  appleNativeSigninEndpoint: `${API_BASE}/api/auth/apple/native-signin`,
   // TODO: Add your Google OAuth client ID
   googleClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '',
   // TODO: Add your Google OAuth client ID for iOS

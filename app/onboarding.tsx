@@ -1,7 +1,7 @@
 import OnboardingCarousel from '@/components/OnboardingCarousel';
 import SignUpModal from '@/components/SignUpModal';
 import { useOnboarding } from '@/contexts/OnboardingContext';
-import { signInWithApple, signInWithEmail, signInWithGoogle } from '@/src/lib/auth';
+import { AuthUser, signInWithApple, signInWithEmail, signInWithGoogle } from '@/src/lib/auth';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { Alert, Platform, View } from 'react-native';
@@ -98,6 +98,30 @@ export default function OnboardingScreen() {
     }
   }, [signIn, router]);
 
+  const handleNativeSignup = useCallback(async (user: AuthUser) => {
+    await signIn(
+      'email-password',
+      undefined,
+      user.email || undefined,
+      user.id,
+      user.token || undefined
+    );
+    setShowSignUpModal(false);
+    router.replace('/(tabs)');
+  }, [signIn, router]);
+
+  const handleNativeLogin = useCallback(async (user: AuthUser) => {
+    await signIn(
+      'email-password',
+      undefined,
+      user.email || undefined,
+      user.id,
+      user.token || undefined
+    );
+    setShowSignUpModal(false);
+    router.replace('/(tabs)');
+  }, [signIn, router]);
+
   const handleContinueAsGuest = useCallback(async () => {
     await continueAsGuest();
     setShowSignUpModal(false);
@@ -138,6 +162,8 @@ export default function OnboardingScreen() {
         onGoogleSignIn={handleGoogleSignIn}
         onEmailSignIn={handleEmailSignIn}
         onContinueAsGuest={handleContinueAsGuest}
+        onNativeSignup={handleNativeSignup}
+        onNativeLogin={handleNativeLogin}
         title={getSignUpTitle()}
         subtitle={getSignUpSubtitle()}
         incentive={getIncentive()}

@@ -41,7 +41,7 @@ interface OnboardingState {
   /** User's unique ID from authentication provider */
   userId: string | null;
   /** Authentication provider used (apple, google, email) */
-  authProvider: 'apple' | 'google' | 'email' | null;
+  authProvider: 'apple' | 'google' | 'email' | 'email-password' | null;
   /** Authentication token for API calls */
   authToken: string | null;
 }
@@ -50,7 +50,7 @@ interface OnboardingContextType extends OnboardingState {
   /** Mark onboarding carousel as completed */
   completeOnboarding: () => Promise<void>;
   /** Sign in with account (Apple, Google, or Email) */
-  signIn: (method: 'apple' | 'google' | 'email', displayName?: string, email?: string, userId?: string, authToken?: string) => Promise<void>;
+  signIn: (method: 'apple' | 'google' | 'email' | 'email-password', displayName?: string, email?: string, userId?: string, authToken?: string) => Promise<void>;
   /** Continue as guest (dismiss sign-up) */
   continueAsGuest: () => Promise<void>;
   /** Sign out */
@@ -146,7 +146,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   }, [state, persistState]);
 
   const signIn = useCallback(async (
-    method: 'apple' | 'google' | 'email',
+    method: 'apple' | 'google' | 'email' | 'email-password',
     displayName?: string,
     email?: string,
     userId?: string,

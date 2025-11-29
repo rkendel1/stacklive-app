@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AuthUser, nativeLogin, nativeSignup } from '../src/lib/auth';
 
 const { height } = Dimensions.get('window');
 
@@ -29,6 +30,10 @@ interface SignUpModalProps {
   onEmailSignIn: (email: string) => void;
   /** Callback when user continues as guest */
   onContinueAsGuest: () => void;
+  /** Callback for native email/password signup success */
+  onNativeSignup?: (user: AuthUser) => void;
+  /** Callback for native email/password login success */
+  onNativeLogin?: (user: AuthUser) => void;
   /** Custom title (for returning users) */
   title?: string;
   /** Custom subtitle (for returning users) */
@@ -46,6 +51,8 @@ export default function SignUpModal({
   onGoogleSignIn,
   onEmailSignIn,
   onContinueAsGuest,
+  onNativeSignup,
+  onNativeLogin,
   title = 'Create your account',
   subtitle = 'Sign up to save your favorites and get personalized recommendations.',
   incentive,
@@ -53,7 +60,10 @@ export default function SignUpModal({
 }: SignUpModalProps) {
   const insets = useSafeAreaInsets();
   const [showEmailInput, setShowEmailInput] = React.useState(false);
+  const [showPasswordInput, setShowPasswordInput] = React.useState(false);
   const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [mode, setMode] = React.useState<'signup' | 'login'>('signup');
 
   // Email validation regex pattern
   const isValidEmail = (emailToValidate: string): boolean => {
@@ -63,13 +73,58 @@ export default function SignUpModal({
 
   const handleEmailSubmit = useCallback(() => {
     if (isValidEmail(email)) {
-      onEmailSignIn(email.trim());
+      setEmail(email.trim());
       setShowEmailInput(false);
-      setEmail('');
+      setShowPasswordInput(true);
     } else {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
     }
-  }, [email, onEmailSignIn]);
+  }, [email]);
+
+  const handlePasswordSubmit = useCallback(async () => {
+    console.log(`${mode} submit triggered with email:`, email, 'password length:', password.length);
+    if (password.length < 8) {
+      Alert.alert('Invalid Password', 'Password must be at least 8 characters long.');
+      return;
+    }
+
+    try {
+      let result;
+      if (mode === 'signup') {
+        console.log('Calling nativeSignup...');
+        result = await nativeSignup(email, password);
+        console.log('nativeSignup result:', result);
+        if (result.success) {
+          setShowPasswordInput(false);
+          setPassword('');
+          setMode('signup');
+          onNativeSignup?.(result.user!);
+          return;
+        } else {
+          Alert.alert('Signup Failed', result.error || 'Please try again.');
+          return;
+        }
+      } else {
+        console.log('Calling nativeLogin...');
+        result = await nativeLogin(email, password);
+        console.log('nativeLogin result:', result);
+        if (result.success) {
+          setShowPasswordInput(false);
+          setPassword('');
+          setMode('signup');
+          onNativeLogin?.(result.user!);
+          return;
+        } else {
+          Alert.alert('Login Failed', result.error || 'Invalid email or password.');
+          return;
+        }
+      }
+    } catch (error) {
+      console.error(`${mode} error:`, error);
+      const errorMsg = mode === 'signup' ? 'Signup failed. Please check your connection and ensure the backend server is running.' : 'Login failed. Please check your connection.';
+      Alert.alert('Error', errorMsg);
+    }
+  }, [email, password, onNativeSignup, onNativeLogin, mode]);
 
   const handleContinueAsGuest = useCallback(() => {
     setShowEmailInput(false);
@@ -92,13 +147,21 @@ export default function SignUpModal({
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        <Text style={styles.title}>{mode === 'signup' ? title : 'Welcome back'}</Text>
+        <Text style={styles.subtitle}>{mode === 'signup' ? subtitle : 'Enter your email and password to log in.'}</Text>
         {incentive && (
           <View style={styles.incentiveContainer}>
             <Text style={styles.incentive}>{incentive}</Text>
           </View>
         )}
+        <View style={styles.toggleContainer}>
+          <Text style={styles.toggleText}>
+            {mode === 'signup' ? 'Already have an account? ' : "Don't have an account? "}
+          </Text>
+          <TouchableOpacity onPress={() => setMode(mode === 'signup' ? 'login' : 'signup')}>
+            <Text style={styles.toggleLink}>{mode === 'signup' ? 'Log in' : 'Sign up'}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Sign-up buttons */}
@@ -129,6 +192,39 @@ export default function SignUpModal({
                 disabled={!email.trim()}
               >
                 <Text style={styles.continueButtonText}>Continue</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : showPasswordInput ? (
+          <View style={styles.emailInputContainer}>
+            <TextInput
+              style={styles.emailInput}
+              placeholder={mode === 'signup' ? 'Create a password' : 'Enter your password'}
+              placeholderTextColor="#999"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoFocus
+            />
+            <View style={styles.emailButtonsRow}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => {
+                  setShowPasswordInput(false);
+                  setShowEmailInput(true);
+                  setPassword('');
+                }}
+              >
+                <Text style={styles.backButtonText}>Back</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.continueButton, password.length < 8 && styles.disabledButton]}
+                onPress={handlePasswordSubmit}
+                disabled={password.length < 8}
+              >
+                <Text style={styles.continueButtonText}>{mode === 'signup' ? 'Sign Up' : 'Log In'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -260,6 +356,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#4A90D9',
     fontWeight: '600',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  toggleText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  toggleLink: {
+    color: '#4A90D9',
+    fontWeight: '600',
+    fontSize: 14,
   },
   buttonsContainer: {
     gap: 12,

@@ -75,6 +75,24 @@ export const useTrendingApps = () => {
   const [curation, setCuration] = useState<any>(null);
 
   useEffect(() => {
+    if (__DEV__) {
+      // In development, use mock data directly to avoid API calls
+      const mockAppsWithUrls = mockAllApps.map((app) => {
+        if (app.deploymentUrl && app.launchUrl === '#') {
+          const url = new URL(app.deploymentUrl);
+          url.searchParams.set('webview', 'true');
+          return { ...app, launchUrl: url.toString() };
+        }
+        return app;
+      });
+      setAllApps(mockAppsWithUrls);
+      setCuration(mockCuration);
+      setTrendingApps(mockAppsWithUrls.filter(app => mockCuration.trendingAppIds.includes(app.id)));
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     const fetchData = async () => {
       try {
         setLoading(true);

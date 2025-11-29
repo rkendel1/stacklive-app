@@ -1,4 +1,5 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
+import * as SecureStore from 'expo-secure-store';
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 import { authConfig } from '../../constants/config';
@@ -6,7 +7,7 @@ import { authConfig } from '../../constants/config';
 // Ensure web browser redirect is handled properly
 WebBrowser.maybeCompleteAuthSession();
 
-export type AuthProvider = 'apple' | 'google' | 'email';
+export type AuthProvider = 'apple' | 'google' | 'email' | 'email-password';
 
 export interface AuthUser {
   id: string;
@@ -63,17 +64,47 @@ export async function signInWithApple(): Promise<AuthResult> {
       token: credential.identityToken || undefined,
     };
 
-    // Call backend API to create/sign in user
-    const apiResult = await callAuthApi(user, 'apple');
-    if (!apiResult.success) {
-      // If API call fails, still return the user for local state management
-      // The app can retry syncing later
-      console.warn('Backend API call failed:', apiResult.error);
+    // Call dedicated Apple native sign-in endpoint with required payload
+    const payload = {
+      identityToken: credential.identityToken,
+      email: credential.email,
+      fullName: credential.fullName,
+    };
+
+    const response = await fetch(authConfig.appleNativeSigninEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        // Store auth token securely
+        await SecureStore.setItemAsync('authToken', data.authToken);
+
+        const updatedUser: AuthUser = {
+          id: data.userId,
+          email: credential.email || null,
+          displayName: credential.fullName
+            ? `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim() || null
+            : null,
+          provider: 'apple',
+          token: data.authToken,
+        };
+
+        return {
+          success: true,
+          user: updatedUser,
+        };
+      }
     }
 
     return {
-      success: true,
-      user: apiResult.user || user,
+      success: false,
+      error: 'Apple sign-in failed',
     };
   } catch (error: unknown) {
     if (error instanceof Error && 'code' in error) {
@@ -236,6 +267,128 @@ export async function signInWithEmail(email: string): Promise<AuthResult> {
         displayName: null,
         provider: 'email',
       },
+    };
+  }
+}
+
+/**
+ * Sign up a new user with email and password.
+ * Calls the native signup endpoint and stores the auth token securely.
+ */
+export async function nativeSignup(email: string, password: string): Promise<AuthResult> {
+  // Validate email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return {
+      success: false,
+      error: 'Please enter a valid email address',
+    };
+  }
+
+  // Validate password
+  if (password.length < 8) {
+    return {
+      success: false,
+      error: 'Password must be at least 8 characters long',
+    };
+  }
+
+  try {
+    const response = await fetch(authConfig.nativeSignupEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Store the auth token securely
+      await SecureStore.setItemAsync('authToken', data.authToken);
+
+      return {
+        success: true,
+        user: {
+          id: data.userId,
+          email,
+          displayName: null,
+          provider: 'email-password',
+          token: data.authToken,
+        },
+      };
+    } else {
+      return {
+        success: false,
+        error: data.error || 'Signup failed',
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Network error during signup',
+    };
+  }
+}
+
+/**
+ * Log in an existing user with email and password.
+ * Calls the native login endpoint and stores the auth token securely.
+ */
+export async function nativeLogin(email: string, password: string): Promise<AuthResult> {
+  // Validate email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return {
+      success: false,
+      error: 'Please enter a valid email address',
+    };
+  }
+
+  try {
+    const response = await fetch(authConfig.nativeLoginEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Store the auth token securely
+      await SecureStore.setItemAsync('authToken', data.authToken);
+
+      return {
+        success: true,
+        user: {
+          id: data.userId,
+          email,
+          displayName: null,
+          provider: 'email-password',
+          token: data.authToken,
+        },
+      };
+    } else {
+      return {
+        success: false,
+        error: data.error || 'Login failed',
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Network error during login',
     };
   }
 }
