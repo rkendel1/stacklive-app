@@ -3,13 +3,14 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useTrendingApps } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
+import { monospaceFontFamily, platformSelect } from '@/src/lib/platform';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 
 // Storage keys
 const STATS_STORAGE_KEY = 'user_stats';
@@ -281,7 +282,7 @@ export default function ProfileScreen() {
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: 16,
-      paddingTop: Platform.OS === 'ios' ? 60 : 16,
+      paddingTop: platformSelect({ ios: 60, default: 16 }),
       backgroundColor: isDark ? '#1c1c1e' : '#fff',
     },
     backButton: {
@@ -562,7 +563,7 @@ export default function ProfileScreen() {
     contextDataValue: {
       fontSize: 13,
       color: isDark ? '#fff' : '#000',
-      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      fontFamily: monospaceFontFamily,
     },
     contextDeleteButton: {
       marginTop: 8,
