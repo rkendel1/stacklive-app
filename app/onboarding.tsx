@@ -99,15 +99,39 @@ export default function OnboardingScreen() {
   }, [signIn, router]);
 
   const handleNativeSignup = useCallback(async (user: AuthUser) => {
-    await signIn(
-      'email-password',
-      undefined,
-      user.email || undefined,
-      user.id,
-      user.token || undefined
-    );
-    setShowSignUpModal(false);
-    router.replace('/(tabs)');
+    console.log('handleNativeSignup called with user:', user.id);
+    try {
+      console.log('About to call signIn');
+      await signIn(
+        'email-password',
+        undefined,
+        user.email || undefined,
+        user.id,
+        user.token || undefined
+      );
+      console.log('signIn completed successfully');
+      Alert.alert('Account created successfully!', 'Welcome to StackLive!');
+    } catch (signInError) {
+      console.error('Sign in error after native signup:', signInError);
+      Alert.alert('Sign in failed', 'Please try again or continue as guest.');
+    } finally {
+      setShowSignUpModal(false);
+      console.log('SignUpModal set to false');
+      try {
+        console.log('Attempting router.replace to /(tabs)');
+        router.replace('/(tabs)');
+        console.log('router.replace called successfully');
+      } catch (navError) {
+        console.error('Navigation error:', navError);
+        // Fallback: try push if replace fails
+        try {
+          router.push('/(tabs)');
+          console.log('Fallback router.push called');
+        } catch (pushError) {
+          console.error('Fallback navigation also failed:', pushError);
+        }
+      }
+    }
   }, [signIn, router]);
 
   const handleNativeLogin = useCallback(async (user: AuthUser) => {

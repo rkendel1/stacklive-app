@@ -106,7 +106,8 @@ export const useTrendingApps = () => {
         ]);
 
         if (!appsRes.ok || !curationRes.ok) {
-          throw new Error(`API fetch failed: ${appsRes.status} or ${curationRes.status}`);
+          console.error(`API fetch failed - Apps: ${appsRes.status} (${appsRes.url}), Curation: ${curationRes.status} (${curationRes.url})`);
+          throw new Error(`API fetch failed: Apps ${appsRes.status}, Curation ${curationRes.status}`);
         }
 
         const apps: MiniApp[] = await appsRes.json();
@@ -141,6 +142,7 @@ export const useTrendingApps = () => {
         ));
       } catch (err) {
         console.error('Trending fetch error:', err);
+        console.log('Using fallback mocks due to API failure');
         // Use mock data as fallback when API fails
         const mockAppsWithUrls = mockAllApps.map((app) => {
           if (app.deploymentUrl && app.launchUrl === '#') {
@@ -153,7 +155,7 @@ export const useTrendingApps = () => {
         setAllApps(mockAppsWithUrls);
         setCuration(mockCuration);
         setTrendingApps(mockAppsWithUrls.filter(app => mockCuration.trendingAppIds.includes(app.id)));
-        setError(null); // Clear error since we have fallback data
+        setError(err instanceof Error ? `Failed to load real data: ${err.message}` : 'Failed to load real data');
       } finally {
         setLoading(false);
       }
