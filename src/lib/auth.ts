@@ -294,13 +294,19 @@ export async function nativeSignup(email: string, password: string): Promise<Aut
   }
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     const response = await fetch(authConfig.nativeSignupEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, password }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -329,6 +335,12 @@ export async function nativeSignup(email: string, password: string): Promise<Aut
       };
     }
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return {
+        success: false,
+        error: 'Signup request timed out. Please check your connection.',
+      };
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Network error during signup',

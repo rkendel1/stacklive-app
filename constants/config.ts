@@ -3,7 +3,7 @@
  * This allows the native app to connect to either a local development server
  * or a live production server without code changes.
  */
-const DEV_HOST = 'localhost';
+const DEV_HOST = '127.0.0.1';
 const DEV_PORT = 32100;
 
 // The `EXPO_PUBLIC_` prefix is required by Expo to expose the variable to your app's code.
@@ -290,7 +290,7 @@ export interface SplashConfig {
 /**
  * Base URL for API endpoints (uses same base as app).
  */
-export const API_BASE = APP_BASE;
+export const API_BASE = process.env.EXPO_PUBLIC_APP_URL ? process.env.EXPO_PUBLIC_APP_URL.replace(/\/$/, "") : 'https://stacklive.dev';
 
 /**
  * Configuration for the splash page.

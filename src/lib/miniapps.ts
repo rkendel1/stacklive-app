@@ -7,12 +7,20 @@ export type MiniApp = {
 
   // --- Display & Branding ---
   icon: string;               // String name from API (e.g., 'Palette'); map to component in rendering
+  iconType?: string;          // Type of icon (e.g., 'lucide')
+  iconUrl?: string | null;    // Direct URL to icon if provided
   backgroundColor?: string;   // A Tailwind CSS class for the background gradient (e.g., 'bg-gradient-to-br from-orange-400 to-red-500').
   iconBackgroundColor?: string; // A Tailwind CSS class for the icon's background.
 
   // --- Metadata & Categorization ---
-  category?: string;          // The primary category (e.g., 'Creative').
+  categories?: string[];      // Array of categories (e.g., ['Creative', 'Tools']).
   tags?: string[];            // An array of tags for searching and filtering (e.g., ['#Creative', "Editor's Choice"]).
+  
+  // --- Creator Info ---
+  creator?: {
+    id: string;
+    email: string;
+  };
   
   // --- App Store Details ---
   deploymentUrl?: string;     // The base deployment URL for the app (used to derive launchUrl).

@@ -3,7 +3,7 @@ import SignUpModal from '@/components/SignUpModal';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { AuthUser, signInWithApple, signInWithEmail, signInWithGoogle } from '@/src/lib/auth';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Platform, View } from 'react-native';
 
 export default function OnboardingScreen() {
@@ -17,6 +17,7 @@ export default function OnboardingScreen() {
   
   const [showCarousel, setShowCarousel] = useState(true);
   const [showSignUpModal, setShowSignUpModal] = useState(false);
+  const [shouldNavigate, setShouldNavigate] = useState(false);
 
   // Determine if we should show full-screen interstitial (after 2+ dismissals)
   const useFullScreenModal = promptCount >= 2;
@@ -44,7 +45,7 @@ export default function OnboardingScreen() {
           result.user.token
         );
         setShowSignUpModal(false);
-        router.replace('/(tabs)');
+        router.push('/profile');
       } else if (result.error && result.error !== 'Sign-in was cancelled') {
         Alert.alert('Sign-In Failed', result.error);
       }
@@ -66,7 +67,7 @@ export default function OnboardingScreen() {
           result.user.token
         );
         setShowSignUpModal(false);
-        router.replace('/(tabs)');
+        router.push('/profile');
       } else if (result.error && result.error !== 'Sign-in was cancelled') {
         Alert.alert('Sign-In Failed', result.error);
       }
@@ -88,7 +89,7 @@ export default function OnboardingScreen() {
           result.user.token
         );
         setShowSignUpModal(false);
-        router.replace('/(tabs)');
+        router.push('/profile');
       } else if (result.error) {
         Alert.alert('Sign-In Failed', result.error);
       }
@@ -110,29 +111,13 @@ export default function OnboardingScreen() {
         user.token || undefined
       );
       console.log('signIn completed successfully');
-      Alert.alert('Account created successfully!', 'Welcome to StackLive!');
+      Alert.alert('Account created successfully!', 'Welcome to StackLive! Redirecting...');
+      setShouldNavigate(true);
     } catch (signInError) {
       console.error('Sign in error after native signup:', signInError);
       Alert.alert('Sign in failed', 'Please try again or continue as guest.');
-    } finally {
-      setShowSignUpModal(false);
-      console.log('SignUpModal set to false');
-      try {
-        console.log('Attempting router.replace to /(tabs)');
-        router.replace('/(tabs)');
-        console.log('router.replace called successfully');
-      } catch (navError) {
-        console.error('Navigation error:', navError);
-        // Fallback: try push if replace fails
-        try {
-          router.push('/(tabs)');
-          console.log('Fallback router.push called');
-        } catch (pushError) {
-          console.error('Fallback navigation also failed:', pushError);
-        }
-      }
     }
-  }, [signIn, router]);
+  }, [signIn, setShouldNavigate]);
 
   const handleNativeLogin = useCallback(async (user: AuthUser) => {
     await signIn(
@@ -142,15 +127,22 @@ export default function OnboardingScreen() {
       user.id,
       user.token || undefined
     );
-    setShowSignUpModal(false);
-    router.replace('/(tabs)');
-  }, [signIn, router]);
+    Alert.alert('Welcome back!', 'Logged in successfully. Redirecting...');
+    setShouldNavigate(true);
+  }, [signIn, setShouldNavigate]);
 
   const handleContinueAsGuest = useCallback(async () => {
     await continueAsGuest();
-    setShowSignUpModal(false);
-    router.replace('/(tabs)');
-  }, [continueAsGuest, router]);
+    setShouldNavigate(true);
+  }, [continueAsGuest, setShouldNavigate]);
+
+  useEffect(() => {
+    if (shouldNavigate) {
+      setShowSignUpModal(false);
+      router.push('/profile');
+      setShouldNavigate(false);
+    }
+  }, [shouldNavigate, router, setShowSignUpModal]);
 
   const getSignUpTitle = () => {
     if (useFullScreenModal) {
