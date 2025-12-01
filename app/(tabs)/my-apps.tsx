@@ -165,7 +165,7 @@ export default function MyAppsScreen() {
               <TouchableOpacity 
                 key={app.id} 
                 style={styles.appItem}
-                onPress={() => router.push(`/(modal)/app-detail/${app.id}`)}
+                onPress={() => router.push({ pathname: '/app-detail', params: { id: app.id } })}
               >
                 <View style={styles.appIcon}>
                   <Text style={styles.appIconText}>{app.icon}</Text>
