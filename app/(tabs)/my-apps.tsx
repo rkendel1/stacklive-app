@@ -3,7 +3,6 @@ import { getIconComponent } from '@/constants/nativeIcons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import GenericPreviewScreen from '../../components/GenericPreviewScreen';
 
 export default function MyAppsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,7 +56,6 @@ export default function MyAppsScreen() {
           <UserIcon size={20} color="#666" />
         </TouchableOpacity>
       </View>
-      <GenericPreviewScreen pageType="my-apps" externalSearchQuery={searchQuery} hideHeader={true} />
     </View>
   );
 }

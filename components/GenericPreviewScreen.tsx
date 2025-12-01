@@ -5,21 +5,19 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
 import WebView from 'react-native-webview';
-import { useHideUI } from '../contexts/HideUIContext';
+
 
 interface Props {
   pageType: PageType;
-  hideHeader?: boolean;
   externalSearchQuery?: string;
 }
 
-export default function GenericPreviewScreen({ pageType, hideHeader, externalSearchQuery }: Props) {
+export default function GenericPreviewScreen({ pageType, externalSearchQuery }: Props) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const colorScheme = useColorScheme();
   const config: PageConfig = pageConfigs[pageType];
   
-  const { hideUI, hideSearchBar, setHideUI, setHideSearchBar } = useHideUI();
 
   const uri = getWebViewUri(pageType, externalSearchQuery ?? searchQuery, colorScheme ? colorScheme as 'light' | 'dark' : undefined);
 
@@ -34,8 +32,7 @@ export default function GenericPreviewScreen({ pageType, hideHeader, externalSea
         const appId = match[1];
         console.log('Intercepting navigation to app:', appId);
         
-        if (APP_DETAIL_CONFIG.hideSearch) setHideSearchBar(true);
-        if (APP_DETAIL_CONFIG.hideTabs) setHideUI(true);
+        
         
         // Use push to show the full-screen modal overlay
         router.push({
@@ -61,8 +58,7 @@ export default function GenericPreviewScreen({ pageType, hideHeader, externalSea
           const appId = match[1];
           console.log('Intercepting via navigationStateChange:', appId);
           
-          if (APP_DETAIL_CONFIG.hideSearch) setHideSearchBar(true);
-          if (APP_DETAIL_CONFIG.hideTabs) setHideUI(true);
+        
           
           // Use push to show the full-screen modal overlay
           router.push({
@@ -76,9 +72,8 @@ export default function GenericPreviewScreen({ pageType, hideHeader, externalSea
 
   return (
     <View style={styles.container}>
-      {!hideUI && !hideHeader && (
+    
         <View style={styles.headerContainer}>
-          {config.hasSearch && !hideSearchBar && (
             <TextInput
               style={[
                 styles.searchInput, 

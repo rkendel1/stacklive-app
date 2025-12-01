@@ -282,7 +282,7 @@ export default function ProfileScreen() {
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: 16,
-      paddingTop: platformSelect({ ios: 60, default: 16 }),
+      paddingTop: platformSelect({ ios: 0, default: 16 }),
       backgroundColor: isDark ? '#1c1c1e' : '#fff',
     },
     backButton: {

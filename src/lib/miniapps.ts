@@ -47,4 +47,10 @@ export type MiniApp = {
       comment: string;
     }[];
   };
+
+  // Additional fields for filtering
+  isFeatured?: boolean;
+  isNewThisWeek?: boolean;
+  isTrending?: boolean;
+  lastDeployedAt?: string;
 };

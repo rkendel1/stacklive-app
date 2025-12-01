@@ -127,7 +127,6 @@ export default function WebViewScreen() {
           allowsInlineMediaPlayback={true}
           mediaPlaybackRequiresUserAction={false}
           originWhitelist={['*']}
-          // Hide browser chrome for headless appearance
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
           bounces={false}

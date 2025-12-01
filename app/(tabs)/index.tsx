@@ -11,7 +11,7 @@ import { useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
-  const { allApps, curation, loading, error } = useAppsData();
+  const { allApps, featuredApps, newApps, loading, error } = useAppsData();
   const colorScheme = useColorScheme();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,15 +20,6 @@ export default function HomeScreen() {
   const carouselRef = useRef<FlatList>(null);
   const isDark = colorScheme === 'dark';
   const screenWidth = Dimensions.get('window').width;
-
-  const getHydratedApps = (ids: string[]): MiniApp[] => {
-    if (!allApps || !ids.length) return [];
-    const allAppsMap = allApps.reduce((map, app) => {
-      map[app.id] = app;
-      return map;
-    }, {} as { [key: string]: MiniApp });
-    return ids.map(id => allAppsMap[id]).filter(Boolean);
-  };
 
   const homeConfig = pageConfigs.home;
 
@@ -254,10 +245,6 @@ export default function HomeScreen() {
     app.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Get featured and other apps
-  const featuredApps = getHydratedApps(curation?.featuredAppIds || []);
-  const newThisWeekApps = getHydratedApps(curation?.newThisWeekAppIds || []);
-
   // Handle carousel scroll to update pagination
   const onCarouselScroll = (event: any) => {
     const slideWidth = screenWidth - 48;
@@ -410,7 +397,7 @@ export default function HomeScreen() {
       </View>
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {renderFeaturedCarousel()}
-        {renderCompactSection('New This Week', newThisWeekApps)}
+        {renderCompactSection('New This Week', newApps)}
       </ScrollView>
       <View style={styles.bottomBar}>
         <TouchableOpacity onPress={() => setShowModal(true)}>

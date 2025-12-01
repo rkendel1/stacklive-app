@@ -1,27 +1,33 @@
 import React, { createContext, ReactNode, useContext, useState } from 'react';
+import { Appearance, ColorSchemeName } from 'react-native';
 
-type ThemeOverride = 'light' | 'dark' | null;
 type ThemeContextType = {
-  override: ThemeOverride;
-  setOverride: (override: ThemeOverride) => void;
+  colorScheme: ColorSchemeName;
+  toggleTheme: () => void;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children, initialOverride }: { children: ReactNode; initialOverride?: ThemeOverride }) {
-  const [override, setOverride] = useState<ThemeOverride>(initialOverride ?? null);
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+  const systemColorScheme = Appearance.getColorScheme();
+  const [colorScheme, setColorScheme] = useState<ColorSchemeName>(systemColorScheme);
+
+  const toggleTheme = () => {
+    setColorScheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   return (
-    <ThemeContext.Provider value={{ override, setOverride }}>
+    <ThemeContext.Provider value={{ colorScheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
-}
+};
 
-export function useThemeOverride() {
+// Custom hook to use theme
+export const useThemeOverride = () => {
   const context = useContext(ThemeContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useThemeOverride must be used within a ThemeProvider');
   }
   return context;
-}
+};

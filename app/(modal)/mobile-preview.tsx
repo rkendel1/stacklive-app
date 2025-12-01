@@ -1,25 +1,15 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { createWebViewHandlers, getAppDetailUri, INJECTED_JAVASCRIPT, SHARED_WEBVIEW_STYLES, WEBVIEW_COMMON_PROPS } from '@/constants/config';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
-import { useHideUI } from '../contexts/HideUIContext';
 
 export default function MobilePreviewScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, launchUrl } = useLocalSearchParams<{ id: string, launchUrl?: string }>();
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const { setHideUI } = useHideUI();
-
-  useFocusEffect(
-    useCallback(() => {
-      setHideUI(true);
-      return () => setHideUI(false);
-    }, [setHideUI])
-  );
 
   if (!id) {
     return (
@@ -30,7 +20,7 @@ export default function MobilePreviewScreen() {
   }
 
   const handlers = createWebViewHandlers(router);
-  const uri = getAppDetailUri(id as string);
+  const uri = launchUrl || getAppDetailUri(id as string);
   const colors = Colors[colorScheme || 'light'];
   const backgroundColor = colors.background;
 

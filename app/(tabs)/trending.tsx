@@ -1,23 +1,31 @@
 import AppCard from '@/components/AppCard';
 import { useColorScheme } from '@/components/useColorScheme';
 import { getIconComponent } from '@/constants/nativeIcons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTrendingApps as useAppsData } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, SectionList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function TrendingScreen() {
-  const { trendingApps, loading, error } = useAppsData();
+  const { trendingApps, featuredApps, newApps, allApps, loading, error } = useAppsData();
   const colorScheme = useColorScheme();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const isDark = colorScheme === 'dark';
 
-  const filteredApps = trendingApps.filter((app: MiniApp) => 
+  const filterApps = (apps: MiniApp[]) => apps.filter(app => 
     app.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     app.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const sections = [
+    { title: 'This Week', data: filterApps(featuredApps) },
+    { title: 'New This Week', data: filterApps(newApps) },
+    { title: 'Trending', data: filterApps(trendingApps.length > 0 ? trendingApps : allApps) }
+  ].filter(section => section.data.length > 0);
 
   const styles = StyleSheet.create({
     container: {
@@ -33,6 +41,14 @@ export default function TrendingScreen() {
     loadingText: {
       marginTop: 8,
       color: isDark ? '#fff' : '#000',
+    },
+    sectionHeader: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: isDark ? '#fff' : '#000',
+      marginTop: 16,
+      marginBottom: 8,
+      paddingHorizontal: 16,
     },
     errorContainer: {
       flex: 1,
@@ -80,21 +96,6 @@ export default function TrendingScreen() {
       color: isDark ? '#fff' : '#000',
       marginRight: 16,
     },
-    listHeader: {
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      backgroundColor: isDark ? '#000' : '#fff',
-    },
-    headerTitle: {
-      fontSize: 22,
-      fontWeight: 'bold',
-      color: isDark ? '#fff' : '#000',
-      marginBottom: 4,
-    },
-    headerSubtitle: {
-      fontSize: 14,
-      color: isDark ? '#9ca3af' : '#6b7280',
-    },
     listContent: {
       paddingHorizontal: 16,
       paddingBottom: 20,
@@ -106,37 +107,42 @@ export default function TrendingScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={isDark ? '#fff' : '#000'} />
-        <Text style={styles.loadingText}>Loading trending apps...</Text>
-      </View>
+      <SafeAreaView style={{ flex: 1 }}>
+        <LinearGradient colors={isDark ? ['#000', '#111'] : ['#00ff9f', '#00b140']} style={{ flex: 1 }}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={isDark ? '#fff' : '#000'} />
+            <Text style={styles.loadingText}>Loading trending apps...</Text>
+          </View>
+        </LinearGradient>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
+      <SafeAreaView style={{ flex: 1 }}>
+        <LinearGradient colors={isDark ? ['#000', '#111'] : ['#00ff9f', '#00b140']} style={{ flex: 1 }}>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        </LinearGradient>
+      </SafeAreaView>
     );
   }
 
-  if (filteredApps.length === 0) {
+  if (sections.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>
-          {searchQuery ? 'No trending apps match your search' : 'No trending apps available'}
-        </Text>
-      </View>
+      <SafeAreaView style={{ flex: 1 }}>
+        <LinearGradient colors={isDark ? ['#000', '#111'] : ['#00ff9f', '#00b140']} style={{ flex: 1 }}>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>
+              {searchQuery ? 'No apps match your search' : 'No apps available'}
+            </Text>
+          </View>
+        </LinearGradient>
+      </SafeAreaView>
     );
   }
-
-  const ListHeaderComponent = () => (
-    <View style={styles.listHeader}>
-      <Text style={styles.headerTitle}>Trending Apps</Text>
-      <Text style={styles.headerSubtitle}>{filteredApps.length} apps</Text>
-    </View>
-  );
 
   const renderAppItem = ({ item }: { item: MiniApp }) => (
     <View style={styles.appItem}>
@@ -144,30 +150,36 @@ export default function TrendingScreen() {
     </View>
   );
 
+  const renderSectionHeader = ({ section: { title } }: { section: { title: string } }) => (
+    <Text style={styles.sectionHeader}>{title}</Text>
+  );
+
   const UserIcon = getIconComponent('user') || (() => <Text>👤</Text>);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchHeader}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search trending..."
-          placeholderTextColor="#9ca3af"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
+    <SafeAreaView style={{ flex: 1 }}>
+      <LinearGradient colors={isDark ? ['#000', '#111'] : ['#00ff9f', '#00b140']} style={{ flex: 1 }}>
+        <View style={styles.searchHeader}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search trending..."
+            placeholderTextColor="#9ca3af"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          <TouchableOpacity style={styles.userIconContainer} onPress={() => router.push('/profile')}>
+            <UserIcon size={20} color="#666" />
+          </TouchableOpacity>
+        </View>
+        <SectionList
+          sections={sections}
+          renderItem={renderAppItem}
+          renderSectionHeader={renderSectionHeader}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
         />
-        <TouchableOpacity style={styles.userIconContainer} onPress={() => router.push('/profile')}>
-          <UserIcon size={20} color="#666" />
-        </TouchableOpacity>
-      </View>
-      <FlatList
-        data={filteredApps}
-        renderItem={renderAppItem}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={ListHeaderComponent}
-        contentContainerStyle={styles.listContent}
-      />
-    </View>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }

@@ -3,7 +3,6 @@ import { getIconComponent } from '@/constants/nativeIcons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import GenericPreviewScreen from '../../components/GenericPreviewScreen';
 
 export default function CollectionsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,12 +16,7 @@ export default function CollectionsScreen() {
       flex: 1,
       backgroundColor: isDark ? '#000' : '#fff',
     },
-    searchHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginHorizontal: 16,
-      marginTop: 16,
-    },
+
     searchInput: {
       flex: 1,
       padding: 12,
@@ -57,7 +51,6 @@ export default function CollectionsScreen() {
           <UserIcon size={20} color="#666" />
         </TouchableOpacity>
       </View>
-      <GenericPreviewScreen pageType="collections" externalSearchQuery={searchQuery} hideHeader={true} />
     </View>
   );
 }

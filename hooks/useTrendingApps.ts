@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 
 export const useTrendingApps = () => {
   const [trendingApps, setTrendingApps] = useState<MiniApp[]>([]);
+  const [featuredApps, setFeaturedApps] = useState<MiniApp[]>([]);
+  const [newApps, setNewApps] = useState<MiniApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [allApps, setAllApps] = useState<MiniApp[]>([]);
@@ -25,12 +27,27 @@ export const useTrendingApps = () => {
         const apps: MiniApp[] = await response.json();
         console.log('Fetched Apps:', apps);
 
-        setAllApps(apps);
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+        const enhancedApps = apps.map(app => ({
+          ...app,
+          isNewThisWeek: app.isNewThisWeek || (app.lastDeployedAt ? new Date(app.lastDeployedAt) >= sevenDaysAgo : false)
+        }));
+
+        setAllApps(enhancedApps);
+
         setCuration(null); // No longer using curation
 
-        const trendingApps = apps.filter(app => app.isTrending === true);
+        const trendingApps = enhancedApps.filter(app => app.isTrending === true);
+        const featuredApps = enhancedApps.filter(app => app.isFeatured === true);
+        const recentApps = enhancedApps
+          .filter(app => app.isNewThisWeek)
+          .sort((a, b) => new Date(b.lastDeployedAt || 0).getTime() - new Date(a.lastDeployedAt || 0).getTime());
 
         setTrendingApps(trendingApps);
+        setFeaturedApps(featuredApps);
+        setNewApps(recentApps);
         setError(null);
       } catch (err) {
         console.error('Trending fetch error:', err);
@@ -46,5 +63,5 @@ export const useTrendingApps = () => {
     fetchData();
   }, []);
 
-  return { allApps, trendingApps, loading, error };
+  return { allApps, trendingApps, featuredApps, newApps, loading, error };
 };

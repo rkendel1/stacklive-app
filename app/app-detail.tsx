@@ -5,7 +5,7 @@ import { useTrendingApps } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
-import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function AppDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -14,6 +14,7 @@ export default function AppDetail() {
   const isDark = colorScheme === 'dark';
 
   const app = allApps.find((a: MiniApp) => a.id === id);
+
 
   useEffect(() => {
     if (!app && !loading && !error) {
@@ -130,7 +131,8 @@ export default function AppDetail() {
   const IconComponent = getIconComponent(app.icon) || (() => <Text>📱</Text>);
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={{ flex: 1 }}>
+      <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.iconContainer}>
           <IconComponent size={32} color="#007AFF" />
@@ -195,10 +197,15 @@ export default function AppDetail() {
 
       <TouchableOpacity
         style={styles.launchButton}
-        onPress={() => Linking.openURL(app.launchUrl!)}
+        onPress={() => {
+          if (!app.launchUrl) return;
+          router.push(`/(modal)/webview?url=${encodeURIComponent(app.launchUrl)}`);
+        }}
       >
         <Text style={styles.launchText}>Launch App</Text>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+      
+    </View>
   );
 }
