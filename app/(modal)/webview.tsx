@@ -6,6 +6,7 @@ import {
   Animated,
   Dimensions,
   PanResponder,
+  Platform,
   StatusBar,
   StyleSheet,
   Text,
@@ -112,25 +113,35 @@ export default function WebViewScreen() {
 
       {/* Full screen WebView */}
       <View style={styles.webviewContainer}>
-        <WebView
-          source={{ uri: url as string }}
-          style={styles.webview}
-          startInLoadingState={true}
-          renderLoading={() => (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#007AFF" />
-            </View>
-          )}
-          scalesPageToFit={true}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          allowsInlineMediaPlayback={true}
-          mediaPlaybackRequiresUserAction={false}
-          originWhitelist={['*']}
-          showsHorizontalScrollIndicator={false}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-        />
+        {Platform.OS === 'web' ? (
+          <iframe
+            src={url as string}
+            style={{ flex: 1, width: '100%', height: '100%', border: 'none' }}
+            title="App WebView"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : (
+          <WebView
+            source={{ uri: url as string }}
+            style={styles.webview}
+            startInLoadingState={true}
+            renderLoading={() => (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#007AFF" />
+              </View>
+            )}
+            scalesPageToFit={true}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            allowsInlineMediaPlayback={true}
+            mediaPlaybackRequiresUserAction={false}
+            originWhitelist={['*']}
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          />
+        )}
       </View>
     </Animated.View>
   );
