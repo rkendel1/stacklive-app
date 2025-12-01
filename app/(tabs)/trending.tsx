@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { ActivityIndicator, SectionList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function TrendingScreen() {
-  const { trendingApps, featuredApps, newApps, allApps, loading, error } = useAppsData();
+  const { trendingApps, loading, error } = useAppsData();
   const colorScheme = useColorScheme();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,10 +21,9 @@ export default function TrendingScreen() {
     app.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Only show apps that are actually marked as trending - no fallback to all apps
   const sections = [
-    { title: 'This Week', data: filterApps(featuredApps) },
-    { title: 'New This Week', data: filterApps(newApps) },
-    { title: 'Trending', data: filterApps(trendingApps.length > 0 ? trendingApps : allApps) }
+    { title: 'Trending', data: filterApps(trendingApps) }
   ].filter(section => section.data.length > 0);
 
   const styles = StyleSheet.create({

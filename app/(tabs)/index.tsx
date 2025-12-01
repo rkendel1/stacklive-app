@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const { allApps, featuredApps, newApps, loading, error } = useAppsData();
@@ -353,7 +354,7 @@ export default function HomeScreen() {
 
   if (searchQuery) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.searchHeader}>
           <TextInput
             style={styles.searchInput}
@@ -377,12 +378,12 @@ export default function HomeScreen() {
             ))
           )}
         </ScrollView>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.searchHeader}>
         <TextInput
           style={styles.searchInput}
@@ -423,6 +424,6 @@ export default function HomeScreen() {
         subtitle="to save apps"
         incentive="Sign up +"
       />
-    </View>
+    </SafeAreaView>
   );
 }
