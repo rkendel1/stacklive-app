@@ -341,3 +341,35 @@ export const authConfig: AuthConfig = {
   // TODO: Add your Google OAuth client ID for iOS
   googleClientIdIOS: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS || '',
 };
+
+/**
+ * In-App Purchases configuration.
+ * Configure your product IDs from App Store Connect and Google Play Console.
+ */
+export interface IAPConfig {
+  /** API endpoint for verifying purchase receipts */
+  verifyReceiptEndpoint: string;
+  /** API endpoint for recording purchases */
+  recordPurchaseEndpoint: string;
+  /** Consumable product IDs (e.g., coins, credits) */
+  consumableProductIds: string[];
+  /** Non-consumable product IDs (e.g., premium features, remove ads) */
+  nonConsumableProductIds: string[];
+  /** Subscription product IDs (e.g., monthly, yearly plans) */
+  subscriptionProductIds: string[];
+}
+
+/**
+ * In-App Purchases configuration - update these values with your actual product IDs.
+ * Product IDs must match those configured in App Store Connect and Google Play Console.
+ */
+export const iapConfig: IAPConfig = {
+  verifyReceiptEndpoint: `${API_BASE}/api/iap/verify`,
+  recordPurchaseEndpoint: `${API_BASE}/api/iap/record`,
+  // TODO: Add your consumable product IDs
+  consumableProductIds: process.env.EXPO_PUBLIC_IAP_CONSUMABLE_IDS?.split(',') || [],
+  // TODO: Add your non-consumable product IDs
+  nonConsumableProductIds: process.env.EXPO_PUBLIC_IAP_NON_CONSUMABLE_IDS?.split(',') || [],
+  // TODO: Add your subscription product IDs
+  subscriptionProductIds: process.env.EXPO_PUBLIC_IAP_SUBSCRIPTION_IDS?.split(',') || [],
+};
