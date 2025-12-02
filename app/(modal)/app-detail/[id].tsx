@@ -115,7 +115,7 @@ export default function AppDetailScreen() {
   // Get app data
   const appData = APP_DATA[id as string];
   const app = detailedMiniApp || allApps.find((a: MiniApp) => a.id === id) || appData;
-  const isMiniApp = (obj: MiniApp | AppData | undefined): obj is MiniApp => Boolean(obj && 'category' in obj);
+  const isMiniApp = (obj: MiniApp | AppData | undefined): obj is MiniApp => Boolean(obj && 'categories' in obj);
   const miniApp = isMiniApp(app) ? app : undefined;
 
   const IconComponent = getIconComponent(app?.icon || DEFAULT_ICON);
@@ -209,7 +209,7 @@ export default function AppDetailScreen() {
         <Text style={[styles.appName, { color: colors.text }]}>{app.name}</Text>
 
         {/* Category */}
-        <Text style={styles.category}>{miniApp?.category || 'App'}</Text>
+        <Text style={styles.category}>{miniApp?.categories?.[0] || 'App'}</Text>
 
         {/* Rating and Reviews */}
         {miniApp?.rating && (
@@ -227,6 +227,28 @@ export default function AppDetailScreen() {
             <Text style={[styles.ratingText, { color: isDark ? '#999' : '#666' }]}>
               {miniApp.rating.toFixed(1)} · {miniApp.reviews || '0'} reviews
             </Text>
+          </View>
+        )}
+
+        {/* Screenshots - positioned prominently after rating info */}
+        {app.screenshots && app.screenshots.length > 0 && (
+          <View style={styles.screenshotsSection}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              style={styles.screenshotsScroll}
+              contentContainerStyle={styles.screenshotsContent}
+            >
+              {app.screenshots.map((screenshot: string, index: number) => (
+                <View key={`screenshot-${index}-${screenshot.slice(-20)}`} style={styles.screenshotWrapper}>
+                  <Image 
+                    source={{ uri: screenshot }} 
+                    style={styles.screenshot} 
+                    resizeMode="cover" 
+                  />
+                </View>
+              ))}
+            </ScrollView>
           </View>
         )}
 
@@ -271,18 +293,6 @@ export default function AppDetailScreen() {
                 </View>
               );
             })}
-          </View>
-        )}
-
-        {/* Screenshots */}
-        {app.screenshots && app.screenshots.length > 0 && (
-          <View style={styles.screenshotsSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Screenshots</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.screenshotsScroll}>
-              {app.screenshots.map((screenshot: string, index: number) => (
-                <Image key={`screenshot-${index}-${screenshot.slice(-20)}`} source={{ uri: screenshot }} style={styles.screenshot} resizeMode="cover" />
-              ))}
-            </ScrollView>
           </View>
         )}
 
@@ -464,17 +474,29 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   screenshotsSection: {
-    marginBottom: 20,
+    marginTop: 8,
+    marginBottom: 24,
   },
   screenshotsScroll: {
     marginHorizontal: -20,
+  },
+  screenshotsContent: {
     paddingHorizontal: 20,
   },
-  screenshot: {
-    width: 200,
-    height: 360,
-    borderRadius: 12,
+  screenshotWrapper: {
     marginRight: 12,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  screenshot: {
+    width: 220,
+    height: 400,
+    borderRadius: 20,
     backgroundColor: '#f0f0f0',
   },
   reviewsSection: {
