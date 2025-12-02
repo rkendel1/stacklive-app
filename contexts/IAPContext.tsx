@@ -1,4 +1,5 @@
-import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import * as InAppPurchases from 'expo-in-app-purchases';
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
   connectAsync,
   disconnectAsync,
@@ -71,6 +72,10 @@ export function IAPProvider({ children }: IAPProviderProps) {
     error: null,
   });
 
+  // Use ref to access current products without causing callback recreation
+  const productsRef = useRef<IAPProduct[]>([]);
+  productsRef.current = state.products;
+
   // Handle incoming purchases
   const handlePurchaseUpdate = useCallback(async (purchase: IAPPurchase) => {
     try {
@@ -84,8 +89,8 @@ export function IAPProvider({ children }: IAPProviderProps) {
           purchasedProductIds: [...new Set([...prev.purchasedProductIds, purchase.productId])],
         }));
 
-        // Determine if this is a consumable product
-        const product = state.products.find((p) => p.productId === purchase.productId);
+        // Determine if this is a consumable product using ref to avoid dependency
+        const product = productsRef.current.find((p) => p.productId === purchase.productId);
         const isConsumable = product?.type === 'consumable';
 
         // Finish the transaction
@@ -104,7 +109,7 @@ export function IAPProvider({ children }: IAPProviderProps) {
     } finally {
       setState((prev) => ({ ...prev, isPurchasing: false }));
     }
-  }, [state.products]);
+  }, []);
 
   // Initialize IAP service
   const initialize = useCallback(async () => {
@@ -142,7 +147,7 @@ export function IAPProvider({ children }: IAPProviderProps) {
       const restoreResult = await restorePurchasesAsync();
       if (restoreResult.success && restoreResult.data) {
         const purchasedIds = restoreResult.data
-          .filter((p) => p.purchaseState === 1) // PURCHASED state
+          .filter((p) => p.purchaseState === InAppPurchases.InAppPurchaseState.PURCHASED)
           .map((p) => p.productId);
         setState((prev) => ({
           ...prev,
@@ -199,7 +204,7 @@ export function IAPProvider({ children }: IAPProviderProps) {
       const result = await restorePurchasesAsync();
       if (result.success && result.data) {
         const purchasedIds = result.data
-          .filter((p) => p.purchaseState === 1)
+          .filter((p) => p.purchaseState === InAppPurchases.InAppPurchaseState.PURCHASED)
           .map((p) => p.productId);
         setState((prev) => ({
           ...prev,
