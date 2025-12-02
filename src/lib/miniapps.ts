@@ -9,6 +9,9 @@ export type MiniApp = {
   icon: string;               // String name from API (e.g., 'Palette'); map to component in rendering
   iconType?: string;          // Type of icon (e.g., 'lucide')
   iconUrl?: string | null;    // Direct URL to icon if provided
+  gradient?: string;          // CSS gradient string (e.g., 'linear-gradient(135deg, #FFA07A, #FF4500)')
+  primaryColor?: string;      // Primary color hex (e.g., '#FFA07A')
+  secondaryColor?: string;    // Secondary color hex (e.g., '#FF4500')
   backgroundColor?: string;   // A Tailwind CSS class for the background gradient (e.g., 'bg-gradient-to-br from-orange-400 to-red-500').
   iconBackgroundColor?: string; // A Tailwind CSS class for the icon's background.
 
@@ -16,6 +19,8 @@ export type MiniApp = {
   categories?: string[];      // Array of categories (e.g., ['Creative', 'Tools']).
   tags?: string[];            // An array of tags for searching and filtering (e.g., ['#Creative', "Editor's Choice"]).
   
+  status?: string;            // App status (e.g., 'published')
+
   // --- Creator Info ---
   creator?: {
     id: string;

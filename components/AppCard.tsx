@@ -1,6 +1,8 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import { getIconComponent } from '@/constants/nativeIcons';
 import { MiniApp } from '@/src/lib/miniapps';
-import { useMemo, useRef } from 'react';
+import { Image as ExpoImage } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useMemo, useRef, useState } from 'react';
 import { Animated, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useColorScheme } from './useColorScheme';
 
@@ -28,6 +30,22 @@ const colorMap: Record<string, Record<number, string>> = {
   pink: { 400: '#fce7f3', 500: '#ec4899', 600: '#db2777' },
   purple: { 400: '#f3e8ff', 500: '#a855f7', 600: '#9333ea' },
   indigo: { 400: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5' },
+};
+
+const getGradientColors = (app: MiniApp, isLarge?: boolean): readonly [string, string] => {
+  if (app.primaryColor && app.secondaryColor) {
+    return [app.primaryColor, app.secondaryColor];
+  }
+  if (app.primaryColor) {
+    return [app.primaryColor, app.primaryColor];
+  }
+  const iconBgColor = app.iconBackgroundColor;
+  const cardBg = iconBgColor?.replace('bg-', '') || 'blue';
+  const match = cardBg.match(/(\w+)-(\d+)/);
+  const color = match ? match[1] : 'blue';
+  return isLarge 
+    ? [colorMap[color]?.[400] || '#fed7aa', colorMap[color]?.[600] || '#ea580c']
+    : [colorMap[color]?.[500] || '#f97316', colorMap[color]?.[600] || '#ea580c'];
 };
 
 // Base styles that don't depend on props
@@ -123,16 +141,11 @@ export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) 
 
   const isLarge = size === 'large';
   const isCompact = size === 'compact';
-  const palette = ['orange', 'blue', 'green', 'purple', 'pink'];
-  const hash = app.id.charCodeAt(0) % palette.length;
-  const defaultColor = palette[hash];
-  const cardBg = app.iconBackgroundColor?.replace('bg-', '') || defaultColor;
-  const match = cardBg.match(/(\w+)-(\d+)/);
-  const color = match ? match[1] : defaultColor;
 
-  const gradientColors: readonly [string, string] = isLarge 
-    ? [colorMap[color]?.[400] || '#fed7aa', colorMap[color]?.[600] || '#ea580c']
-    : [colorMap[color]?.[500] || '#f97316', colorMap[color]?.[600] || '#ea580c'];
+  const IconComponent = getIconComponent(app.icon);
+  const gradientColors = getGradientColors(app, isLarge);
+
+  const [iconError, setIconError] = useState(false);
 
   // Default handler if onPress is not provided
   const handlePress = onPress || (() => {
@@ -185,7 +198,7 @@ export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) 
           width: 48,
           height: 48,
           borderRadius: 24,
-          backgroundColor: 'rgba(255,255,255,0.25)',
+          backgroundColor: 'transparent',
           justifyContent: 'center' as const,
           alignItems: 'center' as const,
           marginRight: 12,
@@ -227,7 +240,7 @@ export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) 
         width: isLarge ? 80 : 56,
         height: isLarge ? 80 : 56,
         borderRadius: isLarge ? 40 : 28,
-        backgroundColor: 'rgba(255,255,255,0.25)',
+        backgroundColor: 'transparent',
         justifyContent: 'center' as const,
         alignItems: 'center' as const,
         marginBottom: isLarge ? 16 : 12,
@@ -263,7 +276,17 @@ export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) 
             style={dynamicStyles.gradient}
           >
             <View style={dynamicStyles.iconContainer}>
-              <Text style={dynamicStyles.iconEmoji}>{getEmojiForIcon(app.icon)}</Text>
+              {app.iconUrl && !iconError ? (
+                <ExpoImage
+                  source={{ uri: app.iconUrl }}
+                  style={{ width: 40, height: 40, borderRadius: 20 }}
+                  contentFit="contain"
+                  cachePolicy="memory-disk"
+                  onError={() => setIconError(true)}
+                />
+              ) : (
+                <IconComponent size={40} color="#fff" />
+              )}
             </View>
             <View style={baseStyles.compactContentContainer}>
               <Text style={dynamicStyles.appName} numberOfLines={1}>{app.name}</Text>
@@ -295,7 +318,21 @@ export default function AppCard({ app, onPress, size = 'small' }: AppCardProps) 
         style={dynamicStyles.gradient}
       >
         <View style={dynamicStyles.iconContainer}>
-          <Text style={dynamicStyles.iconEmoji}>{getEmojiForIcon(app.icon)}</Text>
+          {app.iconUrl && !iconError ? (
+            <ExpoImage
+              source={{ uri: app.iconUrl }}
+              style={{ 
+                width: isLarge ? 64 : 48, 
+                height: isLarge ? 64 : 48, 
+                borderRadius: isLarge ? 32 : 24 
+              }}
+              contentFit="contain"
+              cachePolicy="memory-disk"
+              onError={() => setIconError(true)}
+            />
+          ) : (
+            <IconComponent size={isLarge ? 64 : 48} color="#fff" />
+          )}
         </View>
         <View style={baseStyles.contentContainer}>
           <Text style={dynamicStyles.appName}>{app.name}</Text>

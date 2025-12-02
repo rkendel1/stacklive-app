@@ -1,13 +1,15 @@
+import AppScreenshotsCarousel from '@/components/AppScreenshotsCarousel';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { getIconComponent } from '@/constants/nativeIcons';
 import { useTrendingApps as useAppsData } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
 import { Ionicons } from '@expo/vector-icons';
+import { Image as ExpoImage } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Image, PanResponder, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, PanResponder, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Color mapping for gradient backgrounds
@@ -23,7 +25,14 @@ const colorMap: Record<string, Record<number, string>> = {
 // Default icon name constant
 const DEFAULT_ICON = 'Box';
 
-const getGradientColors = (iconBgColor?: string): readonly [string, string] => {
+const getGradientColors = (miniApp?: MiniApp): readonly [string, string] => {
+  if (miniApp?.primaryColor && miniApp.secondaryColor) {
+    return [miniApp.primaryColor, miniApp.secondaryColor];
+  }
+  if (miniApp?.primaryColor) {
+    return [miniApp.primaryColor, miniApp.primaryColor];
+  }
+  const iconBgColor = miniApp?.iconBackgroundColor;
   const cardBg = iconBgColor?.replace('bg-', '') || 'blue';
   const match = cardBg.match(/(\w+)-(\d+)/);
   const color = match ? match[1] : 'blue';
@@ -39,6 +48,9 @@ export default function AppDetailScreen() {
   const { height } = Dimensions.get('window');
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentScreenshotIndex, setCurrentScreenshotIndex] = useState(0);
+  const [iconError, setIconError] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   // Swipe down to dismiss
   const translateY = useRef(new Animated.Value(0)).current;
@@ -104,7 +116,7 @@ export default function AppDetailScreen() {
   };
 
   const IconComponent = getIconComponent(app?.icon || DEFAULT_ICON);
-  const gradientColors = getGradientColors(miniApp?.iconBackgroundColor);
+  const gradientColors = getGradientColors(miniApp);
 
   const toggleFavorite = () => setIsFavorite(!isFavorite);
 
@@ -185,7 +197,17 @@ export default function AppDetailScreen() {
             style={styles.iconGradient}
           >
             <View style={styles.iconContainer}>
-              <IconComponent size={56} color="#fff" />
+              {miniApp?.iconUrl && !iconError ? (
+                <ExpoImage
+                  source={{ uri: miniApp.iconUrl }}
+                  style={{ width: 56, height: 56, borderRadius: 12 }}
+                  contentFit="contain"
+                  cachePolicy="memory-disk"
+                  onError={() => setIconError(true)}
+                />
+              ) : (
+                <IconComponent size={56} color="#fff" />
+              )}
             </View>
           </LinearGradient>
         </View>
@@ -233,13 +255,19 @@ export default function AppDetailScreen() {
               snapToAlignment="start"
             >
               {safeApp.screenshots.filter((screenshot): screenshot is string => typeof screenshot === 'string').map((screenshot: string, index: number) => (
-                <View key={`screenshot-${index}-${screenshot.slice(-20)}`} style={styles.screenshotWrapper}>
-                  <Image
+                <TouchableOpacity
+                  key={`screenshot-${index}-${screenshot.slice(-20)}`}
+                  onPress={() => { setSelectedIndex(index); setShowModal(true); }}
+                  activeOpacity={0.8}
+                  style={styles.screenshotWrapper}
+                >
+                  <ExpoImage
                     source={{ uri: screenshot }}
                     style={styles.screenshot}
-                    resizeMode="cover"
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
                   />
-                </View>
+                </TouchableOpacity>
               ))}
             </ScrollView>
             {/* Pagination Dots */}
@@ -260,6 +288,16 @@ export default function AppDetailScreen() {
             <Text style={[styles.placeholderText, { color: isDark ? '#999' : '#666', textAlign: 'center', marginVertical: 20 }]}>
               No screenshots available
             </Text>
+          </View>
+        )}
+
+        {showModal && (
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000 }}>
+            <AppScreenshotsCarousel
+              screenshots={(safeApp.screenshots || []).filter((screenshot): screenshot is string => typeof screenshot === 'string')}
+              initialIndex={selectedIndex}
+              onClose={() => setShowModal(false)}
+            />
           </View>
         )}
 
@@ -436,6 +474,10 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 16,
     lineHeight: 24,
+  },
+  placeholderText: {
+    fontSize: 16,
+    textAlign: 'center',
   },
   tagsSection: {
     marginBottom: 20,

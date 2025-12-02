@@ -1,23 +1,85 @@
 import { View as ThemedView } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
-import { Dimensions, FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useMemo } from 'react';
+import { Animated, Dimensions, FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring
+} from 'react-native-reanimated';
 
 interface AppScreenshotsCarouselProps {
   screenshots: string[];
   onClose: () => void;
+  initialIndex?: number;
 }
 
 const { width, height } = Dimensions.get('window');
 
-export default function AppScreenshotsCarousel({ screenshots, onClose }: AppScreenshotsCarouselProps) {
+export default function AppScreenshotsCarousel({ screenshots, onClose, initialIndex }: AppScreenshotsCarouselProps) {
   const colorScheme = useColorScheme();
   const backgroundColor = colorScheme === 'dark' ? '#000' : '#fff';
 
+  const scale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate((event) => {
+      scale.value = event.scale;
+    })
+    .onEnd(() => {
+      if (scale.value < 1) {
+        scale.value = withSpring(1);
+      } else if (scale.value > 3) {
+        scale.value = withSpring(3);
+      }
+    });
+
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      if (scale.value > 1) {
+        translateX.value = event.translationX;
+        translateY.value = event.translationY;
+      }
+    })
+    .onEnd(() => {
+      if (scale.value < 1.1) {
+        translateX.value = withSpring(0);
+        translateY.value = withSpring(0);
+        scale.value = withSpring(1);
+      }
+    });
+
+  const gesture = useMemo(
+    () => Gesture.Simultaneous(pinchGesture, panGesture),
+    []
+  );
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
+  }));
+
   const renderScreenshot = ({ item }: { item: string }) => (
     <View style={styles.screenshotContainer}>
-      <Image source={{ uri: item }} style={styles.screenshot} resizeMode="contain" />
+      <GestureDetector gesture={gesture}>
+        <Animated.View style={[styles.screenshot, animatedStyle]}>
+          <Image source={{ uri: item }} style={styles.screenshotImage} resizeMode="contain" />
+        </Animated.View>
+      </GestureDetector>
     </View>
   );
+
+  const getItemLayout = (data: any, index: number) => ({
+    length: width,
+    offset: width * index,
+    index,
+  });
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]} lightColor="#000" darkColor="#000">
@@ -29,6 +91,8 @@ export default function AppScreenshotsCarousel({ screenshots, onClose }: AppScre
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
+        initialScrollIndex={initialIndex || 0}
+        getItemLayout={getItemLayout}
         style={styles.list}
         contentContainerStyle={styles.listContent}
       />
@@ -54,18 +118,24 @@ const styles = StyleSheet.create({
     width: width,
   },
   listContent: {
-    height: height * 0.8,
+    height: height,
   },
   screenshotContainer: {
     width,
-    height: height * 0.8,
+    height: height,
     justifyContent: 'center',
     alignItems: 'center',
   },
   screenshot: {
-    width: width * 0.9,
-    height: height * 0.7,
-    borderRadius: 8,
+    width: width,
+    height: height,
+    borderRadius: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  screenshotImage: {
+    width: width,
+    height: height,
   },
   closeButton: {
     position: 'absolute',
