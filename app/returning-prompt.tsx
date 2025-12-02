@@ -127,7 +127,7 @@ export default function ReturningPromptScreen() {
     if (sessionCount === 3) {
       return 'Sign up to never lose your progress and unlock all features.';
     }
-    return 'Join our community to get the most out of StackLive.';
+    return 'Join our community to get the most out of Mini App Central.';
   };
 
   const getIncentive = () => {

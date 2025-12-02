@@ -37,7 +37,7 @@ const defaultPages: OnboardingPage[] = [
   {
     id: '2',
     title: 'Join millions of users',
-    description: 'Over 50M people trust StackLive for their daily app discovery. See what\'s trending and never miss out.',
+    description: 'Over 50M people trust Mini App Central for their daily app discovery. See what\'s trending and never miss out.',
     backgroundColor: '#7B68EE',
   },
   {
