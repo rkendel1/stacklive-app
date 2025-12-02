@@ -1,13 +1,13 @@
 import AppCard from '@/components/AppCard';
 import { useColorScheme } from '@/components/useColorScheme';
 import { getIconComponent } from '@/constants/nativeIcons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTrendingApps as useAppsData } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, SectionList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TrendingScreen() {
   const { trendingApps, loading, error } = useAppsData();
@@ -107,7 +107,7 @@ export default function TrendingScreen() {
   if (loading) {
     return (
       <SafeAreaView style={{ flex: 1 }}>
-        <LinearGradient colors={isDark ? ['#000', '#111'] : ['#00ff9f', '#00b140']} style={{ flex: 1 }}>
+        <LinearGradient colors={isDark ? ['#000', '#111'] : ['#fff', '#fff']} style={{ flex: 1 }}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={isDark ? '#fff' : '#000'} />
             <Text style={styles.loadingText}>Loading trending apps...</Text>
@@ -120,7 +120,7 @@ export default function TrendingScreen() {
   if (error) {
     return (
       <SafeAreaView style={{ flex: 1 }}>
-        <LinearGradient colors={isDark ? ['#000', '#111'] : ['#00ff9f', '#00b140']} style={{ flex: 1 }}>
+        <LinearGradient colors={isDark ? ['#000', '#111'] : ['#fff', '#fff']} style={{ flex: 1 }}>
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{error}</Text>
           </View>
@@ -132,7 +132,7 @@ export default function TrendingScreen() {
   if (sections.length === 0) {
     return (
       <SafeAreaView style={{ flex: 1 }}>
-        <LinearGradient colors={isDark ? ['#000', '#111'] : ['#00ff9f', '#00b140']} style={{ flex: 1 }}>
+        <LinearGradient colors={isDark ? ['#000', '#111'] : ['#fff', '#fff']} style={{ flex: 1 }}>
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>
               {searchQuery ? 'No apps match your search' : 'No apps available'}
@@ -157,7 +157,7 @@ export default function TrendingScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <LinearGradient colors={isDark ? ['#000', '#111'] : ['#00ff9f', '#00b140']} style={{ flex: 1 }}>
+      <LinearGradient colors={isDark ? ['#000', '#111'] : ['#fff', '#fff']} style={{ flex: 1 }}>
         <View style={styles.searchHeader}>
           <TextInput
             style={styles.searchInput}

@@ -40,6 +40,7 @@ export default function AppDetailScreen() {
   const { height } = Dimensions.get('window');
   const [isFavorite, setIsFavorite] = useState(false);
   const [detailedMiniApp, setDetailedMiniApp] = useState<MiniApp | null>(null);
+  const [currentScreenshotIndex, setCurrentScreenshotIndex] = useState(0);
 
   // Swipe down to dismiss
   const translateY = useRef(new Animated.Value(0)).current;
@@ -114,9 +115,77 @@ export default function AppDetailScreen() {
 
   // Get app data
   const appData = APP_DATA[id as string];
-  const app = detailedMiniApp || allApps.find((a: MiniApp) => a.id === id) || appData;
+  let app = detailedMiniApp || allApps.find((a: MiniApp) => a.id === id) || appData;
+
+  // Demo mock data for fixedvercel to showcase carousel and details (remove in production)
+  if (id === 'fixedvercel') {
+    app = {
+      id: 'fixedvercel',
+      name: 'FixedVercel',
+      description: 'A productivity app for seamless deployments.',
+      longDescription: 'FixedVercel is a powerful productivity app that helps you deploy and manage your web applications with ease. Featuring seamless integration with Vercel, automatic builds, and real-time previews, it streamlines your development workflow. Explore features like custom domains, environment variables, and team collaboration tools.',
+      icon: 'Box',
+      iconType: 'lucide',
+      categories: ['Productivity'],
+      screenshots: [
+        'https://via.placeholder.com/220x400/007AFF/FFFFFF?text=Screenshot+1',
+        'https://via.placeholder.com/220x400/007AFF/FFFFFF?text=Screenshot+2',
+        'https://via.placeholder.com/220x400/007AFF/FFFFFF?text=Screenshot+3',
+      ],
+      features: [
+        { icon: 'cpu', title: 'Fast Deploys', description: 'Deploy your apps in seconds with optimized builds.' },
+        { icon: 'globe', title: 'Global CDN', description: 'Serve your content from edge locations worldwide.' },
+        { icon: 'users', title: 'Team Collaboration', description: 'Invite team members and manage permissions easily.' },
+      ],
+      tags: ['Productivity', 'Web Dev', 'Deployment'],
+      rating: 4.5,
+      reviews: 120,
+      ratingsAndReviews: {
+        reviews: [
+          { name: 'User1', rating: 5, comment: 'Amazing tool! Saved me hours.' },
+          { name: 'User2', rating: 4, comment: 'Great for quick deploys.' },
+        ],
+      },
+      launchUrl: 'https://example.com',
+    } as MiniApp;
+  }
+
   const isMiniApp = (obj: MiniApp | AppData | undefined): obj is MiniApp => Boolean(obj && 'categories' in obj);
   const miniApp = isMiniApp(app) ? app : undefined;
+
+  // Ensure app properties are strings to prevent rendering errors
+  const safeApp = {
+    ...app,
+    name: typeof app?.name === 'string' ? app.name : 'Unknown App',
+    description: typeof app?.description === 'string' ? app.description : 'No description available',
+    icon: typeof app?.icon === 'string' ? app.icon : DEFAULT_ICON,
+  };
+
+  // Demo mock data for fixedvercel to showcase carousel and details (remove in production)
+  if (id === 'kh737g7hmdrhna9ten3tza3fkd7we4g6') { // fixedvercel id
+    safeApp.screenshots = [
+      'https://via.placeholder.com/220x400/007AFF/FFFFFF?text=Screenshot+1',
+      'https://via.placeholder.com/220x400/007AFF/FFFFFF?text=Screenshot+2',
+      'https://via.placeholder.com/220x400/007AFF/FFFFFF?text=Screenshot+3',
+    ];
+    if (miniApp) {
+      miniApp.longDescription = 'FixedVercel is a powerful productivity app that helps you deploy and manage your web applications with ease. Featuring seamless integration with Vercel, automatic builds, and real-time previews, it streamlines your development workflow. Explore features like custom domains, environment variables, and team collaboration tools.';
+      (miniApp as any).features = [
+        { icon: 'cpu', title: 'Fast Deploys', description: 'Deploy your apps in seconds with optimized builds.' },
+        { icon: 'globe', title: 'Global CDN', description: 'Serve your content from edge locations worldwide.' },
+        { icon: 'users', title: 'Team Collaboration', description: 'Invite team members and manage permissions easily.' },
+      ];
+      (miniApp as any).tags = ['Productivity', 'Web Dev', 'Deployment'];
+      (miniApp as any).ratingsAndReviews = {
+        reviews: [
+          { name: 'User1', rating: 5, comment: 'Amazing tool! Saved me hours.' },
+          { name: 'User2', rating: 4, comment: 'Great for quick deploys.' },
+        ],
+      };
+      (miniApp as any).rating = 4.5;
+      (miniApp as any).reviews = 120;
+    }
+  }
 
   const IconComponent = getIconComponent(app?.icon || DEFAULT_ICON);
   const gradientColors = getGradientColors(miniApp?.iconBackgroundColor);
@@ -171,7 +240,7 @@ export default function AppDetailScreen() {
       {...panResponder.panHandlers}
     >
       {/* Minimal Header with Back and Favorite */}
-      <View style={[styles.header, { paddingTop: insets.top }]}>
+      <View style={[styles.header, { paddingTop: insets.top || 0 }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
@@ -188,7 +257,7 @@ export default function AppDetailScreen() {
       {/* Scrollable Content */}
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: (insets.bottom || 0) + 100 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* App Icon with Gradient Background */}
@@ -206,7 +275,7 @@ export default function AppDetailScreen() {
         </View>
 
         {/* App Name */}
-        <Text style={[styles.appName, { color: colors.text }]}>{app.name}</Text>
+        <Text style={[styles.appName, { color: colors.text }]}>{safeApp.name}</Text>
 
         {/* Category */}
         <Text style={styles.category}>{miniApp?.categories?.[0] || 'App'}</Text>
@@ -231,24 +300,44 @@ export default function AppDetailScreen() {
         )}
 
         {/* Screenshots - positioned prominently after rating info */}
-        {app.screenshots && app.screenshots.length > 0 && (
+        {safeApp.screenshots && Array.isArray(safeApp.screenshots) && safeApp.screenshots.length > 0 && (
           <View style={styles.screenshotsSection}>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false} 
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              decelerationRate="fast"
+              onMomentumScrollEnd={(event) => {
+                const index = Math.round(event.nativeEvent.contentOffset.x / (220 + 12));
+                setCurrentScreenshotIndex(index);
+              }}
               style={styles.screenshotsScroll}
               contentContainerStyle={styles.screenshotsContent}
+              snapToInterval={232}
+              snapToAlignment="start"
             >
-              {app.screenshots.map((screenshot: string, index: number) => (
+              {safeApp.screenshots.filter((screenshot): screenshot is string => typeof screenshot === 'string').map((screenshot: string, index: number) => (
                 <View key={`screenshot-${index}-${screenshot.slice(-20)}`} style={styles.screenshotWrapper}>
-                  <Image 
-                    source={{ uri: screenshot }} 
-                    style={styles.screenshot} 
-                    resizeMode="cover" 
+                  <Image
+                    source={{ uri: screenshot }}
+                    style={styles.screenshot}
+                    resizeMode="cover"
                   />
                 </View>
               ))}
             </ScrollView>
+            {/* Pagination Dots */}
+            <View style={styles.dotsContainer}>
+              {safeApp.screenshots.filter((screenshot): screenshot is string => typeof screenshot === 'string').map((_, index) => (
+                <View
+                  key={`dot-${index}`}
+                  style={[
+                    styles.dot,
+                    { backgroundColor: index === currentScreenshotIndex ? '#007AFF' : 'rgba(0, 122, 255, 0.3)' }
+                  ]}
+                />
+              ))}
+            </View>
           </View>
         )}
 
@@ -256,7 +345,7 @@ export default function AppDetailScreen() {
         <View style={styles.descriptionSection}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>About</Text>
           <Text style={[styles.description, { color: isDark ? '#ccc' : '#555' }]}>
-            {miniApp?.longDescription || app.description}
+            {miniApp?.longDescription || safeApp.description}
           </Text>
         </View>
 
@@ -321,7 +410,7 @@ export default function AppDetailScreen() {
       </ScrollView>
 
       {/* Launch App Button - Anchored to Bottom */}
-      <View style={[styles.launchButtonContainer, { paddingBottom: insets.bottom + 16, backgroundColor, borderTopColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+      <View style={[styles.launchButtonContainer, { paddingBottom: (insets.bottom || 0) + 16, backgroundColor, borderTopColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
         <TouchableOpacity style={styles.launchButton} activeOpacity={0.8} onPress={launchApp}>
           <Ionicons name="rocket" size={22} color="white" />
           <Text style={styles.launchButtonText}>Launch App</Text>
@@ -498,6 +587,18 @@ const styles = StyleSheet.create({
     height: 400,
     borderRadius: 20,
     backgroundColor: '#f0f0f0',
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 12,
+    marginBottom: 24,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
   },
   reviewsSection: {
     marginBottom: 20,
