@@ -12,6 +12,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, PanResponder, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+
+
+
+
 // Color mapping for gradient backgrounds
 const colorMap: Record<string, Record<number, string>> = {
   orange: { 400: '#fed7aa', 500: '#f97316', 600: '#ea580c' },
@@ -52,6 +56,17 @@ export default function AppDetailScreen() {
   const [showModal, setShowModal] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  const [showCarousel, setShowCarousel] = useState(false);
+
+  useEffect(() => {
+    if (showModal) {
+      const timeout = setTimeout(() => setShowCarousel(true), 50);
+      return () => clearTimeout(timeout);
+    } else {
+      setShowCarousel(false);
+    }
+  }, [showModal]);
+  
   // Swipe down to dismiss
   const translateY = useRef(new Animated.Value(0)).current;
   const SWIPE_THRESHOLD = height * 0.2;
@@ -114,6 +129,9 @@ export default function AppDetailScreen() {
     description: typeof app?.description === 'string' ? app.description : 'No description available',
     icon: typeof app?.icon === 'string' ? app.icon : DEFAULT_ICON,
   };
+
+  // Filter screenshots to only strings to prevent rendering errors
+  const filteredScreenshots = (safeApp.screenshots || []).filter((screenshot): screenshot is string => typeof screenshot === 'string');
 
   const IconComponent = getIconComponent(app?.icon || DEFAULT_ICON);
   const gradientColors = getGradientColors(miniApp);
@@ -238,7 +256,7 @@ export default function AppDetailScreen() {
         )}
 
         {/* Screenshots - positioned prominently after rating info */}
-        {safeApp.screenshots && Array.isArray(safeApp.screenshots) && safeApp.screenshots.length > 0 ? (
+        {filteredScreenshots.length > 0 ? (
           <View style={styles.screenshotsSection}>
             <ScrollView
               horizontal
@@ -254,7 +272,7 @@ export default function AppDetailScreen() {
               snapToInterval={232}
               snapToAlignment="start"
             >
-              {safeApp.screenshots.filter((screenshot): screenshot is string => typeof screenshot === 'string').map((screenshot: string, index: number) => (
+              {filteredScreenshots.map((screenshot: string, index: number) => (
                 <TouchableOpacity
                   key={`screenshot-${index}-${screenshot.slice(-20)}`}
                   onPress={() => { setSelectedIndex(index); setShowModal(true); }}
@@ -272,7 +290,7 @@ export default function AppDetailScreen() {
             </ScrollView>
             {/* Pagination Dots */}
             <View style={styles.dotsContainer}>
-              {safeApp.screenshots.filter((screenshot): screenshot is string => typeof screenshot === 'string').map((_, index) => (
+              {filteredScreenshots.map((_, index) => (
                 <View
                   key={`dot-${index}`}
                   style={[
@@ -291,11 +309,11 @@ export default function AppDetailScreen() {
           </View>
         )}
 
-        {showModal && (
+        {showCarousel && showModal && (
           <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000 }}>
             <AppScreenshotsCarousel
-              screenshots={(safeApp.screenshots || []).filter((screenshot): screenshot is string => typeof screenshot === 'string')}
-              initialIndex={selectedIndex}
+              screenshots={Array.isArray(filteredScreenshots) ? [...filteredScreenshots] : []}
+              initialIndex={typeof selectedIndex === 'number' && !isNaN(selectedIndex) ? selectedIndex : 0}
               onClose={() => setShowModal(false)}
             />
           </View>
