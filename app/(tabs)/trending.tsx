@@ -76,6 +76,7 @@ export default function TrendingScreen() {
       alignItems: 'center',
       marginHorizontal: 16,
       marginTop: 16,
+      backgroundColor: isDark ? '#000' : '#fff',
     },
     userIconContainer: {
       width: 40,

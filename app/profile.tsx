@@ -3,7 +3,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useTrendingApps } from '@/hooks/useTrendingApps';
 import { MiniApp } from '@/src/lib/miniapps';
-import { monospaceFontFamily, platformSelect } from '@/src/lib/platform';
+import { monospaceFontFamily } from '@/src/lib/platform';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -11,6 +11,7 @@ import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Storage keys
 const STATS_STORAGE_KEY = 'user_stats';
@@ -282,7 +283,7 @@ export default function ProfileScreen() {
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: 16,
-      paddingTop: platformSelect({ ios: 0, default: 16 }),
+      paddingTop: 24,
       backgroundColor: isDark ? '#1c1c1e' : '#fff',
     },
     backButton: {
@@ -623,13 +624,17 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+      <SafeAreaView style={styles.header}>
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          style={styles.backButton}
+          hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+        >
           <FontAwesome name="chevron-left" size={20} color="#007AFF" />
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle}>Profile</ThemedText>
         <View style={styles.headerSpacer} />
-      </View>
+      </SafeAreaView>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Avatar + Name Section */}

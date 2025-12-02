@@ -101,30 +101,6 @@ export const pageConfigs: Record<PageType, PageConfig> = {
   }
 };
 
-/**
- * Interface for app data used in native detail rendering.
- */
-export interface AppData {
-  name: string;
-  description: string;
-  icon: any; // Image source
-  screenshots: string[]; // Image paths
-}
-
-/**
- * Mock app data map by ID for native UI rendering.
- */
-export const APP_DATA: Record<string, AppData> = {
-  '1': {
-    name: 'Sample App',
-    description: 'This is a sample app description for demonstration purposes. It showcases various features like previews and details.',
-    icon: require('../assets/images/icon.png'), // Use existing asset
-    screenshots: [
-      require('../assets/images/splash-icon.png'),
-      require('../assets/images/icon.png')
-    ]
-  }
-};
 
 /**
  * Generates a URI for a specific page type.

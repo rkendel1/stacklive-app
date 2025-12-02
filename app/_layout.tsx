@@ -12,7 +12,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="(modal)" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="profile" />
+            <Stack.Screen name="profile" options={{ gestureEnabled: true }} />
             <Stack.Screen name="app-detail" />
             <Stack.Screen name="onboarding" />
             <Stack.Screen name="returning-prompt" />

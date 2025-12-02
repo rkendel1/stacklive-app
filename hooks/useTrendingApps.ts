@@ -1,3 +1,4 @@
+import { API_BASE } from '@/constants/config';
 import { MiniApp } from '@/src/lib/miniapps';
 import { useEffect, useState } from 'react';
 
@@ -17,7 +18,7 @@ export const useTrendingApps = () => {
         setLoading(true);
         setError(null);
 
-        const response = await fetch('https://stacklive.dev/api/apps/list');
+        const response = await fetch(`${API_BASE}/api/apps/list`);
 
         if (!response.ok) {
           const errorData = await response.json();
