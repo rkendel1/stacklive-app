@@ -2,9 +2,9 @@ import { useThemeOverride } from '../contexts/ThemeContext';
 import { useColorScheme as nativeUseColorScheme } from 'react-native';
 
 export function useColorScheme(): 'light' | 'dark' | null {
-  const override = useThemeOverride()?.override;
-  if (override) {
-    return override;
+  const themeContext = useThemeOverride();
+  if (themeContext?.colorScheme) {
+    return themeContext.colorScheme;
   }
   return nativeUseColorScheme() ?? 'light';
 }
