@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "stacklive-app",
+    "name": "Mini App Central - by Stacklive",
     "slug": "stacklive-app",
+    "keywords": ["mini apps", "app discovery", "trending apps", "mobile apps", "app store", "mini app", "stacklive", "app central", "discover apps", "new apps", "instant apps", "lightweight apps", "web apps"],
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

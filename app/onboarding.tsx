@@ -111,7 +111,7 @@ export default function OnboardingScreen() {
         user.token || undefined
       );
       console.log('signIn completed successfully');
-      Alert.alert('Account created successfully!', 'Welcome to StackLive! Redirecting...');
+      Alert.alert('Account created successfully!', 'Welcome to Mini App Central! Redirecting...');
       setShouldNavigate(true);
     } catch (signInError) {
       console.error('Sign in error after native signup:', signInError);

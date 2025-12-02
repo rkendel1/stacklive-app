@@ -23,7 +23,7 @@ interface UserStats {
   activeStreaks: number;
   appsUsedThisWeek: number;
   confettiExploded: number;
-  daysInStacklive: number;
+  daysInApp: number;
 }
 
 interface ContextData {
@@ -58,7 +58,7 @@ const DEFAULT_STATS: UserStats = {
   activeStreaks: 0,
   appsUsedThisWeek: 0,
   confettiExploded: 0,
-  daysInStacklive: 1,
+  daysInApp: 1,
 };
 
 export default function ProfileScreen() {
@@ -907,8 +907,8 @@ export default function ProfileScreen() {
               <ThemedText style={styles.statLabel}>Confetti exploded</ThemedText>
             </View>
             <View style={styles.statItem}>
-              <ThemedText style={styles.statValue}>{stats.daysInStacklive}</ThemedText>
-              <ThemedText style={styles.statLabel}>Days in Stacklive</ThemedText>
+              <ThemedText style={styles.statValue}>{stats.daysInApp}</ThemedText>
+              <ThemedText style={styles.statLabel}>Days in App</ThemedText>
             </View>
           </View>
         </View>
@@ -935,7 +935,7 @@ export default function ProfileScreen() {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <ThemedText style={styles.versionText}>Stacklive version {APP_VERSION}</ThemedText>
+          <ThemedText style={styles.versionText}>Mini App Central version {APP_VERSION}</ThemedText>
           <View style={styles.footerLinks}>
             <TouchableOpacity onPress={() => openLink('https://stacklive.dev/privacy')}>
               <ThemedText style={styles.footerLink}>Privacy Policy</ThemedText>
